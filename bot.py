@@ -7,8 +7,7 @@ API_ID = 39343656
 API_HASH = "53a398cd93b13272900671b8f5a9280d"
 BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
 
-bot = TelegramClient("bot_session", API_ID, API_HASH)
-user_client = TelegramClient("user_session", API_ID, API_HASH)
+bot = TelegramClient("bot", API_ID, API_HASH)
 
 @bot.on(events.NewMessage(pattern="/start"))
 async def start(event):
@@ -28,7 +27,7 @@ async def check(event):
     not_found = []
     for username in usernames:
         try:
-            user = await user_client.get_entity(username)
+            user = await bot.get_entity(username)
             if getattr(user, "premium", False):
                 premium.append(f"✅ @{username}")
             else:
@@ -45,9 +44,5 @@ async def check(event):
         result += "Не найдены:\n" + "\n".join(not_found)
     await event.respond(result)
 
-async def main():
-    await user_client.start()
-    await bot.start(bot_token=BOT_TOKEN)
-    await bot.run_until_disconnected()
-
-asyncio.run(main())
+bot.start(bot_token=BOT_TOKEN)
+bot.run_until_disconnected()
