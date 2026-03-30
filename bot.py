@@ -50,6 +50,9 @@ async def check(event):
 async def main():
     await user_client.start()
     await bot.start(bot_token=BOT_TOKEN)
-    await bot.run_until_disconnected()
+    print("Бот запущен!")
+    while True:
+        await bot.run_until_disconnected()
+        await asyncio.sleep(5)
 
 asyncio.run(main())
