@@ -37,7 +37,7 @@ async def check(event):
                 no_premium.append(f"❌ @{username}")
         except Exception:
             not_found.append(f"⚠️ @{username}")
-        await asyncio.sleep(1)
+        await asyncio.sleep(5)
     result = "ИТОГ:\n\n"
     if premium:
         result += "С Premium:\n" + "\n".join(premium) + "\n\n"
