@@ -1,13 +1,16 @@
 import asyncio
 import re
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 from telethon.errors import UsernameNotOccupiedError, UsernameInvalidError
 
 API_ID = 39343656
 API_HASH = "53a398cd93b13272900671b8f5a9280d"
 BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
+SESSION_STRING = "1ApWapzMBu8IAoYueqgAmpzyqhepsplmlOUyEYLvBWL1k_02atZokNPi96u6_D-mvnOqFpI2y1szl0y7sYPAQ0V3TnIKq_HGEAK5V-0t6J0S8Ey3evuLYRNaCDDkQSswaf-nrOcZUlBwrGYUl37gWvo-nhOJDpR3LJYw1tNM-p7B89LDo9Vsz2dsBll72jOuxCf69_mKde0JqJlOSe7mKCRLAH-iy_XU6r_MjWrsn96-QEZ0WsM21wH4o-_B0urGHDUioc6mfRcYAXK_YH2ZRKsycNQHOpoIzTqICGRN-t9fTJcaRvsST90Yqt95lZVDAT_OpTnEX5c1wjqFY_32VkdutZqZbvto="
 
 bot = TelegramClient("bot", API_ID, API_HASH)
+user_client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 
 @bot.on(events.NewMessage(pattern="/start"))
 async def start(event):
@@ -27,7 +30,7 @@ async def check(event):
     not_found = []
     for username in usernames:
         try:
-            user = await bot.get_entity(username)
+            user = await user_client.get_entity(username)
             if getattr(user, "premium", False):
                 premium.append(f"✅ @{username}")
             else:
@@ -44,5 +47,9 @@ async def check(event):
         result += "Не найдены:\n" + "\n".join(not_found)
     await event.respond(result)
 
-bot.start(bot_token=BOT_TOKEN)
-bot.run_until_disconnected()
+async def main():
+    await user_client.start()
+    await bot.start(bot_token=BOT_TOKEN)
+    await bot.run_until_disconnected()
+
+asyncio.run(main())
