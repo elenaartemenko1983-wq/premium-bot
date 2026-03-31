@@ -2,7 +2,6 @@ import asyncio
 import re
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
-from telethon.errors import UsernameNotOccupiedError, UsernameInvalidError
 
 API_ID = 39343656
 API_HASH = "53a398cd93b13272900671b8f5a9280d"
@@ -26,21 +25,28 @@ async def check(event):
         return
     await event.respond(f"Проверяю {len(usernames)} аккаунтов, подожди...")
     premium = []
+    paid_messages = []
     no_premium = []
     not_found = []
     for username in usernames:
         try:
             user = await user_client.get_entity(username)
-            if getattr(user, "premium", False):
+            has_premium = getattr(user, "premium", False)
+            stars_amount = getattr(user, "send_paid_messages_stars", None)
+            if stars_amount:
+                paid_messages.append(f"💫 @{username} — {stars_amount} звёзд")
+            elif has_premium:
                 premium.append(f"✅ @{username}")
             else:
                 no_premium.append(f"❌ @{username}")
         except Exception:
             not_found.append(f"⚠️ @{username}")
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
     result = "ИТОГ:\n\n"
     if premium:
         result += "С Premium:\n" + "\n".join(premium) + "\n\n"
+    if paid_messages:
+        result += "Платные сообщения:\n" + "\n".join(paid_messages) + "\n\n"
     if no_premium:
         result += "Без Premium:\n" + "\n".join(no_premium) + "\n\n"
     if not_found:
@@ -51,8 +57,6 @@ async def main():
     await user_client.start()
     await bot.start(bot_token=BOT_TOKEN)
     print("Бот запущен!")
-    while True:
-        await bot.run_until_disconnected()
-        await asyncio.sleep(5)
+    await bot.run_until_disconnected()
 
 asyncio.run(main())
