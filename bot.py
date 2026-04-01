@@ -2,6 +2,7 @@ import asyncio
 import re
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+from telethon.errors import FloodWaitError
 
 API_ID = 39343656
 API_HASH = "53a398cd93b13272900671b8f5a9280d"
@@ -39,6 +40,21 @@ async def check(event):
                 premium.append(f"✅ @{username}")
             else:
                 no_premium.append(f"❌ @{username}")
+        except FloodWaitError as e:
+            await event.respond(f"⏳ Telegram просит подождать {e.seconds} сек, продолжаю...")
+            await asyncio.sleep(e.seconds)
+            try:
+                user = await user_client.get_entity(username)
+                has_premium = getattr(user, "premium", False)
+                stars_amount = getattr(user, "send_paid_messages_stars", None)
+                if stars_amount:
+                    paid_messages.append(f"💫 @{username} — {stars_amount} звёзд")
+                elif has_premium:
+                    premium.append(f"✅ @{username}")
+                else:
+                    no_premium.append(f"❌ @{username}")
+            except Exception:
+                not_found.append(f"⚠️ @{username}")
         except Exception:
             not_found.append(f"⚠️ @{username}")
         await asyncio.sleep(3)
