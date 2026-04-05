@@ -7,7 +7,7 @@ from telethon.errors import FloodWaitError
 API_ID = 39343656
 API_HASH = "53a398cd93b13272900671b8f5a9280d"
 BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
-SESSION_STRING = "1ApWapzMBu8IAoYueqgAmpzyqhepsplmlOUyEYLvBWL1k_02atZokNPi96u6_D-mvnOqFpI2y1szl0y7sYPAQ0V3TnIKq_HGEAK5V-0t6J0S8Ey3evuLYRNaCDDkQSswaf-nrOcZUlBwrGYUl37gWvo-nhOJDpR3LJYw1tNM-p7B89LDo9Vsz2dsBll72jOuxCf69_mKde0JqJlOSe7mKCRLAH-iy_XU6r_MjWrsn96-QEZ0WsM21wH4o-_B0urGHDUioc6mfRcYAXK_YH2ZRKsycNQHOpoIzTqICGRN-t9fTJcaRvsST90Yqt95lZVDAT_OpTnEX5c1wjqFY_32VkdutZqZbvto="
+SESSION_STRING = "1ApWapzMBu6momEfmnDSihYlYGv_lekOk6D3JJDAw2IqeIMp9h5AZYbjTO5moOcHfiZ3RtZi4gW0JCHsY7OhIMa7m5wJOjirdtepCDXVPlBjERjggZMxiKo0uzjO5EZIZxjjsU17a8Q-RYwjTjhgmRAlko7VE11MeKpcgQGo_BxoTs4IjO-AU8ppQmFKnAdRyRYz9H4pO_2ZcJcCh8sKS_2Q5kJu52uz6Vy3HoBY_jNTzGn_d8kvSyufEBQa5MGT_SwM9PlSMzwGm42CzaKCGZIr_YZqIgJ2D6Tm1ASafdJF75viGPwcjDvZMintx5k8vX-cJl_pxvOEhy9CcvGMGuUM7Jo0o74I="
 
 bot = TelegramClient("bot", API_ID, API_HASH)
 user_client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
@@ -41,7 +41,7 @@ async def check(event):
             else:
                 no_premium.append(f"❌ @{username}")
         except FloodWaitError as e:
-            await event.respond(f"⏳ Telegram просит подождать {e.seconds} сек, продолжаю...")
+            await event.respond(f"⏳ Telegram просит подождать {e.seconds} сек...")
             await asyncio.sleep(e.seconds)
             try:
                 user = await user_client.get_entity(username)
