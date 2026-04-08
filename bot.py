@@ -20,7 +20,7 @@ from telethon.errors import (
 logging.basicConfig(level=logging.INFO)
 
 # ─── НАСТРОЙКИ ───────────────────────────────────────────────
-BOT_TOKEN = "ВАШ_BOT_TOKEN"
+BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
 ACCOUNTS_FILE = "accounts.json"
 
 # API данные для авторизации новых аккаунтов
