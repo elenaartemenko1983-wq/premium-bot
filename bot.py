@@ -30,7 +30,7 @@ STATS_FILE = "stats.json"
 
 # ─── АДМІНИ ──────────────────────────────────────────────────
 # Додай Telegram user_id всіх адмінів
-ADMIN_IDS = [123456789, 987654321]  # ← головний і другий адмін
+ADMIN_IDS = [7338481397, 8643268507]  # ← головний і другий адмін
 
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
