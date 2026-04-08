@@ -26,10 +26,11 @@ BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
 ACCOUNTS_FILE = "accounts.json"
 USERS_FILE = "users.json"
 PROMO_FILE = "promos.json"
+STATS_FILE = "stats.json"
 
-# ─── АДМІН ───────────────────────────────────────────────────
-# Вкажи свій Telegram user_id тут
-ADMIN_IDS = [7338481397]  # ← замінити на свій ID
+# ─── АДМІНИ ──────────────────────────────────────────────────
+# Додай Telegram user_id всіх адмінів
+ADMIN_IDS = [123456789, 987654321]  # ← головний і другий адмін
 
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
@@ -203,6 +204,28 @@ TEXTS = {
         "btn_admin_del_promo": "🗑 Видалити",
         "btn_prev": "◀️",
         "btn_next": "▶️",
+        # Реферальна система
+        "referral_info": (
+            "👥 <b>Реферальна програма</b>\n\n"
+            "Запрошуй друзів — отримуй безкоштовні дні!\n\n"
+            "🔗 Твоє реферальне посилання:\n<code>{link}</code>\n\n"
+            "👤 Запрошено: <b>{count}</b> друзів\n"
+            "🎁 Зароблено бонусів: <b>{bonus}</b> днів\n\n"
+            "За кожного запрошеного друга, що купить підписку — <b>+3 дні</b> тобі!"
+        ),
+        "referral_bonus": "🎉 Твій друг купив підписку! Тобі нараховано <b>+3 дні</b> підписки.",
+        "btn_referral": "👥 Реферальна програма",
+        # Статистика розсилок
+        "my_stats": (
+            "📈 <b>Твоя статистика</b>\n\n"
+            "🚀 Розсилок запущено: <b>{total_mailings}</b>\n"
+            "✉️ Повідомлень відправлено: <b>{total_sent}</b>\n"
+            "❌ Помилок всього: <b>{total_failed}</b>\n"
+            "📊 Успішність: <b>{rate}%</b>"
+        ),
+        "btn_my_stats": "📈 Моя статистика",
+        # Нотифікація про закінчення підписки
+        "sub_expiry_warn": "⚠️ <b>Підписка закінчується через {hours} годин!</b>\n\nПродовж зараз 👇",
     },
     "ru": {
         "welcome": "👋 <b>Smart Sender Bot</b>\n\nУмная рассылка через Telegram с защитой от банов.\n\n📊 Подписка: {sub}\n\nВыбери действие 👇",
@@ -359,6 +382,28 @@ TEXTS = {
         "btn_admin_del_promo": "🗑 Удалить",
         "btn_prev": "◀️",
         "btn_next": "▶️",
+        # Реферальная система
+        "referral_info": (
+            "👥 <b>Реферальная программа</b>\n\n"
+            "Приглашай друзей — получай бесплатные дни!\n\n"
+            "🔗 Твоя реферальная ссылка:\n<code>{link}</code>\n\n"
+            "👤 Приглашено: <b>{count}</b> друзей\n"
+            "🎁 Заработано бонусов: <b>{bonus}</b> дней\n\n"
+            "За каждого приглашённого друга, купившего подписку — <b>+3 дня</b> тебе!"
+        ),
+        "referral_bonus": "🎉 Твой друг купил подписку! Тебе начислено <b>+3 дня</b> подписки.",
+        "btn_referral": "👥 Реферальная программа",
+        # Статистика рассылок
+        "my_stats": (
+            "📈 <b>Твоя статистика</b>\n\n"
+            "🚀 Рассылок запущено: <b>{total_mailings}</b>\n"
+            "✉️ Сообщений отправлено: <b>{total_sent}</b>\n"
+            "❌ Ошибок всего: <b>{total_failed}</b>\n"
+            "📊 Успешность: <b>{rate}%</b>"
+        ),
+        "btn_my_stats": "📈 Моя статистика",
+        # Уведомление об истечении подписки
+        "sub_expiry_warn": "⚠️ <b>Подписка истекает через {hours} часов!</b>\n\nПродли сейчас 👇",
     },
     "en": {
         "welcome": "👋 <b>Smart Sender Bot</b>\n\nSmart Telegram mailing with anti-ban protection.\n\n📊 Subscription: {sub}\n\nChoose an action 👇",
@@ -515,6 +560,28 @@ TEXTS = {
         "btn_admin_del_promo": "🗑 Delete",
         "btn_prev": "◀️",
         "btn_next": "▶️",
+        # Referral system
+        "referral_info": (
+            "👥 <b>Referral Program</b>\n\n"
+            "Invite friends — get free days!\n\n"
+            "🔗 Your referral link:\n<code>{link}</code>\n\n"
+            "👤 Invited: <b>{count}</b> friends\n"
+            "🎁 Bonuses earned: <b>{bonus}</b> days\n\n"
+            "For every friend who buys a subscription — <b>+3 days</b> for you!"
+        ),
+        "referral_bonus": "🎉 Your friend bought a subscription! You received <b>+3 days</b>.",
+        "btn_referral": "👥 Referral Program",
+        # Mailing stats
+        "my_stats": (
+            "📈 <b>Your Statistics</b>\n\n"
+            "🚀 Mailings launched: <b>{total_mailings}</b>\n"
+            "✉️ Messages sent: <b>{total_sent}</b>\n"
+            "❌ Total errors: <b>{total_failed}</b>\n"
+            "📊 Success rate: <b>{rate}%</b>"
+        ),
+        "btn_my_stats": "📈 My Statistics",
+        # Subscription expiry warning
+        "sub_expiry_warn": "⚠️ <b>Subscription expires in {hours} hours!</b>\n\nRenew now 👇",
     }
 }
 
@@ -674,6 +741,75 @@ def use_promo(user_id: int, code: str):
     return True, promo["plan"]
 
 
+# ─── СТАТИСТИКА РОЗСИЛОК ─────────────────────────────────────
+def load_stats() -> dict:
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_stats(stats: dict):
+    with open(STATS_FILE, "w") as f:
+        json.dump(stats, f, ensure_ascii=False, indent=2)
+
+
+def record_mailing_result(user_id: int, sent: int, failed: int):
+    stats = load_stats()
+    uid_str = str(user_id)
+    if uid_str not in stats:
+        stats[uid_str] = {"mailings": 0, "sent": 0, "failed": 0}
+    stats[uid_str]["mailings"] += 1
+    stats[uid_str]["sent"] += sent
+    stats[uid_str]["failed"] += failed
+    save_stats(stats)
+
+
+def get_user_stats(user_id: int) -> dict:
+    stats = load_stats()
+    return stats.get(str(user_id), {"mailings": 0, "sent": 0, "failed": 0})
+
+
+# ─── РЕФЕРАЛЬНА СИСТЕМА ──────────────────────────────────────
+def get_referrer(user_id: int) -> int | None:
+    """Returns referrer user_id if this user was invited by someone."""
+    user = get_user(user_id)
+    return user.get("referrer")
+
+
+def set_referrer(user_id: int, referrer_id: int):
+    users = load_users()
+    uid_str = str(user_id)
+    if uid_str not in users:
+        users[uid_str] = {}
+    if "referrer" not in users[uid_str]:
+        users[uid_str]["referrer"] = referrer_id
+        # Increment referrer's invited count
+        ref_str = str(referrer_id)
+        if ref_str in users:
+            users[ref_str]["ref_count"] = users[ref_str].get("ref_count", 0) + 1
+    save_users(users)
+
+
+def add_referral_bonus(referrer_id: int):
+    """Add 3 bonus days to referrer when their invited user buys a subscription."""
+    users = load_users()
+    ref_str = str(referrer_id)
+    if ref_str not in users:
+        return
+    now = time.time()
+    current = users[ref_str].get("expires", now)
+    if current == -1:
+        return  # Already forever
+    bonus_days = 3
+    if current and current > now:
+        users[ref_str]["expires"] = current + bonus_days * 86400
+    else:
+        users[ref_str]["expires"] = now + bonus_days * 86400
+    users[ref_str]["ref_bonus_days"] = users[ref_str].get("ref_bonus_days", 0) + bonus_days
+    save_users(users)
+
+
 # ─── АКАУНТИ (окремі для кожного юзера) ─────────────────────
 def load_all_accounts() -> dict:
     if os.path.exists(ACCOUNTS_FILE):
@@ -776,6 +912,8 @@ def main_menu_kb(user_id: int = None):
         kb.button(text=t(user_id, "btn_buy"), callback_data="buy_sub")
         kb.button(text=t(user_id, "btn_promo"), callback_data="enter_promo")
     kb.button(text=t(user_id, "btn_my_sub"), callback_data="my_sub")
+    kb.button(text=t(user_id, "btn_my_stats"), callback_data="my_stats")
+    kb.button(text=t(user_id, "btn_referral"), callback_data="referral")
     kb.button(text=t(user_id, "btn_help"), callback_data="help")
     kb.button(text=t(user_id, "btn_settings"), callback_data="settings")
     if user_id and user_id in ADMIN_IDS:
@@ -920,24 +1058,23 @@ async def cmd_start(message: Message, state: FSMContext):
     if "lang" not in users[uid_str]:
         users[uid_str]["lang"] = "uk"
     save_users(users)
+
+    # Обробка реферального посилання /start ref_12345678
+    args = message.text.split()
+    if len(args) > 1 and args[1].startswith("ref_"):
+        try:
+            referrer_id = int(args[1].replace("ref_", ""))
+            if referrer_id != user_id:
+                set_referrer(user_id, referrer_id)
+        except ValueError:
+            pass
+
     sub_text = get_subscription_text(user_id)
     await message.answer(
         t(user_id, "welcome", sub=sub_text),
         parse_mode="HTML",
         reply_markup=main_menu_kb(user_id)
     )
-
-
-# ─── СЕКРЕТНА КОМАНДА ─────────────────────────────────────────
-@dp.message(F.text.lower() == SECRET_CODE)
-async def cmd_secret(message: Message):
-    user_id = message.from_user.id
-    if get_user(user_id).get("expires") == -1:
-        await message.answer(t(user_id, "secret_already"), parse_mode="HTML", reply_markup=main_menu_kb(user_id))
-        return
-    lang = get_user_lang(user_id)
-    set_user(user_id, {"expires": -1, "plan": "Forever (gift)", "lang": lang})
-    await message.answer(t(user_id, "secret_ok"), parse_mode="HTML", reply_markup=main_menu_kb(user_id))
 
 
 # ─── НАЛАШТУВАННЯ / МОВА ─────────────────────────────────────
@@ -1035,6 +1172,14 @@ async def cb_paid(call: CallbackQuery, state: FSMContext):
         activate_subscription(user_id, plan_key)
         lang = get_user_lang(user_id)
         name = PLANS[plan_key][lang]
+        # Нараховуємо бонус реферреру
+        referrer_id = get_referrer(user_id)
+        if referrer_id:
+            add_referral_bonus(referrer_id)
+            try:
+                await bot.send_message(referrer_id, t(referrer_id, "referral_bonus"), parse_mode="HTML")
+            except Exception:
+                pass
         await state.clear()
         await call.message.edit_text(
             t(user_id, "payment_ok", name=name, sub=get_subscription_text(user_id)),
@@ -1469,6 +1614,9 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
 
     await client.disconnect()
 
+    # Записуємо статистику
+    record_mailing_result(user_id, sent, failed)
+
     errors_text = ""
     if errors_log:
         errors_text = t(user_id, "mailing_errors", errors="\n".join(errors_log[-8:]))
@@ -1864,5 +2012,82 @@ async def cmd_admin(message: Message, state: FSMContext):
     )
 
 
+# ─── МОЯ СТАТИСТИКА ──────────────────────────────────────────
+@dp.callback_query(F.data == "my_stats")
+async def cb_my_stats(call: CallbackQuery):
+    user_id = call.from_user.id
+    s = get_user_stats(user_id)
+    total = s["sent"] + s["failed"]
+    rate = round(s["sent"] / total * 100) if total > 0 else 0
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_back"), callback_data="back_main")
+    await call.message.edit_text(
+        t(user_id, "my_stats",
+          total_mailings=s["mailings"],
+          total_sent=s["sent"],
+          total_failed=s["failed"],
+          rate=rate),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+# ─── РЕФЕРАЛЬНА ПРОГРАМА ─────────────────────────────────────
+@dp.callback_query(F.data == "referral")
+async def cb_referral(call: CallbackQuery):
+    user_id = call.from_user.id
+    bot_info = await bot.get_me()
+    link = f"https://t.me/{bot_info.username}?start=ref_{user_id}"
+    user = get_user(user_id)
+    count = user.get("ref_count", 0)
+    bonus = user.get("ref_bonus_days", 0)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_back"), callback_data="back_main")
+    await call.message.edit_text(
+        t(user_id, "referral_info", link=link, count=count, bonus=bonus),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+# ─── ФОНОВА ЗАДАЧА: НОТИФІКАЦІЇ ПРО ЗАКІНЧЕННЯ ПІДПИСКИ ─────
+async def subscription_expiry_notifier():
+    """Sends warnings 24h before subscription expires. Runs every hour."""
+    notified_key = "expiry_notified"
+    while True:
+        await asyncio.sleep(3600)  # Run every hour
+        users = load_users()
+        now = time.time()
+        for uid_str, udata in users.items():
+            exp = udata.get("expires")
+            if not exp or exp == -1:
+                continue
+            hours_left = (exp - now) / 3600
+            # Notify at 24h and 2h before expiry, once each
+            for threshold in [24, 2]:
+                flag = f"{notified_key}_{threshold}"
+                if 0 < hours_left <= threshold and not udata.get(flag):
+                    try:
+                        uid = int(uid_str)
+                        kb = InlineKeyboardBuilder()
+                        kb.button(text=t(uid, "btn_buy_sub"), callback_data="buy_sub")
+                        await bot.send_message(
+                            uid,
+                            t(uid, "sub_expiry_warn", hours=int(hours_left)),
+                            parse_mode="HTML",
+                            reply_markup=kb.as_markup()
+                        )
+                        users[uid_str][flag] = True
+                        save_users(users)
+                    except Exception:
+                        pass
+                    break
+
+
+# ─── ЗАПУСК ───────────────────────────────────────────────────
+async def on_startup():
+    asyncio.create_task(subscription_expiry_notifier())
+
+
 if __name__ == "__main__":
-    asyncio.run(dp.start_polling(bot))
+    asyncio.run(dp.start_polling(bot, on_startup=on_startup))
