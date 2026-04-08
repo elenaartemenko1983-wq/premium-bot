@@ -31,7 +31,7 @@ SECRET_CODE = "freeforever"
 
 # ─── АДМІН ───────────────────────────────────────────────────
 # Вкажи свій Telegram user_id тут
-ADMIN_IDS = [123456789]  # ← замінити на свій ID
+ADMIN_IDS = [7338481397]  # ← замінити на свій ID
 
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
