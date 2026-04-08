@@ -21,27 +21,30 @@ from telethon.errors import (
 
 logging.basicConfig(level=logging.INFO)
 
-# ─── НАСТРОЙКИ ───────────────────────────────────────────────
+# ─── НАЛАШТУВАННЯ ────────────────────────────────────────────
 BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
 ACCOUNTS_FILE = "accounts.json"
-USERS_FILE = "users.json"  # хранит подписки пользователей
+USERS_FILE = "users.json"
 
-# Твой TON-кошелёк для приёма платежей
+# Секретна команда для безкоштовного доступу назавжди
+SECRET_CODE = "freeforever"
+
+# TON-гаманець для прийому платежів
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
-# API данные для авторизации новых аккаунтов
+# API дані для авторизації нових акаунтів
 DEFAULT_API_ID = 2040
 DEFAULT_API_HASH = "b18441a1ff607e10a989891a5462e627"
 # ─────────────────────────────────────────────────────────────
 
-# Тарифы: (название, дней, сумма TON)
-# дней = 0 → навсегда
+# Тарифи: (назва, днів, сума TON)
+# днів = 0 → назавжди
 PLANS = {
-    "1d":  ("1 день",    1,   1),
-    "3d":  ("3 дня",     3,   2),
-    "7d":  ("Неделя",    7,   5),
-    "30d": ("Месяц",     30,  15),
-    "inf": ("Навсегда",  0,   35),
+    "1d":  ("1 день",   1,   1),
+    "3d":  ("3 дні",    3,   2),
+    "7d":  ("Тиждень",  7,   5),
+    "30d": ("Місяць",   30,  15),
+    "inf": ("Назавжди", 0,   35),
 }
 
 bot = Bot(token=BOT_TOKEN)
@@ -50,7 +53,7 @@ dp = Dispatcher(storage=MemoryStorage())
 auth_clients: dict = {}
 
 
-# ─── РАБОТА С ПОДПИСКАМИ ────────────────────────────────────
+# ─── ПІДПИСКИ ────────────────────────────────────────────────
 def load_users() -> dict:
     if os.path.exists(USERS_FILE):
         with open(USERS_FILE, "r") as f:
@@ -79,7 +82,7 @@ def has_active_subscription(user_id: int) -> bool:
     if not user:
         return False
     expires = user.get("expires")
-    if expires == -1:  # навсегда
+    if expires == -1:
         return True
     if expires and time.time() < expires:
         return True
@@ -89,16 +92,16 @@ def has_active_subscription(user_id: int) -> bool:
 def get_subscription_text(user_id: int) -> str:
     user = get_user(user_id)
     if not user:
-        return "❌ Нет подписки"
+        return "❌ Немає підписки"
     expires = user.get("expires")
     if expires == -1:
-        return "✅ Навсегда"
+        return "✅ Назавжди"
     if expires and time.time() < expires:
         remaining = int(expires - time.time())
         days = remaining // 86400
         hours = (remaining % 86400) // 3600
-        return f"✅ Активна ещё {days}д {hours}ч"
-    return "❌ Истекла"
+        return f"✅ Активна ще {days}д {hours}г"
+    return "❌ Закінчилась"
 
 
 def activate_subscription(user_id: int, plan_key: str):
@@ -107,42 +110,45 @@ def activate_subscription(user_id: int, plan_key: str):
     now = time.time()
 
     if days == 0:
-        expires = -1  # навсегда
+        expires = -1
     else:
         current_expires = user.get("expires", now)
         if current_expires == -1:
-            expires = -1  # уже навсегда — оставляем
+            expires = -1
         elif current_expires > now:
-            expires = current_expires + days * 86400  # продлеваем
+            expires = current_expires + days * 86400
         else:
             expires = now + days * 86400
 
     set_user(user_id, {"expires": expires, "plan": name})
 
 
-# ─── РАБОТА С АККАУНТАМИ ─────────────────────────────────────
-def load_accounts() -> dict:
+# ─── АКАУНТИ (окремі для кожного юзера) ─────────────────────
+def load_all_accounts() -> dict:
     if os.path.exists(ACCOUNTS_FILE):
         with open(ACCOUNTS_FILE, "r") as f:
             return json.load(f)
     return {}
 
 
-def save_accounts(accounts: dict):
+def save_all_accounts(all_accounts: dict):
     with open(ACCOUNTS_FILE, "w") as f:
-        json.dump(accounts, f, ensure_ascii=False, indent=2)
+        json.dump(all_accounts, f, ensure_ascii=False, indent=2)
 
 
-def get_accounts() -> dict:
-    return load_accounts()
+def get_accounts(user_id: int) -> dict:
+    all_accounts = load_all_accounts()
+    return all_accounts.get(str(user_id), {})
 
 
-# ─── ПРОВЕРКА ОПЛАТЫ TON ─────────────────────────────────────
+def save_accounts(user_id: int, accounts: dict):
+    all_accounts = load_all_accounts()
+    all_accounts[str(user_id)] = accounts
+    save_all_accounts(all_accounts)
+
+
+# ─── ПЕРЕВІРКА ОПЛАТИ TON ────────────────────────────────────
 async def check_ton_payment(amount_ton: float, comment: str) -> bool:
-    """
-    Проверяет последние транзакции на TON_WALLET через toncenter API.
-    Ищет входящий перевод с нужной суммой и комментарием за последние 30 минут.
-    """
     url = f"https://toncenter.com/api/v2/getTransactions"
     params = {
         "address": TON_WALLET,
@@ -157,20 +163,16 @@ async def check_ton_payment(amount_ton: float, comment: str) -> bool:
                 txs = data.get("result", [])
                 now = time.time()
                 for tx in txs:
-                    # Только входящие
                     in_msg = tx.get("in_msg", {})
                     if not in_msg:
                         continue
-                    # Проверяем время (последние 30 минут)
                     utime = tx.get("utime", 0)
                     if now - utime > 1800:
                         continue
-                    # Проверяем сумму (в nanoTON, 1 TON = 1_000_000_000)
                     value = int(in_msg.get("value", 0))
                     expected = int(amount_ton * 1_000_000_000)
-                    if abs(value - expected) > 10_000_000:  # допуск 0.01 TON
+                    if abs(value - expected) > 10_000_000:
                         continue
-                    # Проверяем комментарий
                     msg_comment = in_msg.get("message", "").strip()
                     if comment.lower() in msg_comment.lower():
                         return True
@@ -179,7 +181,7 @@ async def check_ton_payment(amount_ton: float, comment: str) -> bool:
     return False
 
 
-# ─── FSM СОСТОЯНИЯ ───────────────────────────────────────────
+# ─── FSM СТАНИ ───────────────────────────────────────────────
 class AddAccount(StatesGroup):
     entering_phone = State()
     entering_code = State()
@@ -197,16 +199,16 @@ class Payment(StatesGroup):
     waiting_confirm = State()
 
 
-# ─── КЛАВИАТУРЫ ──────────────────────────────────────────────
+# ─── КЛАВІАТУРИ ──────────────────────────────────────────────
 def main_menu_kb(user_id: int = None):
     kb = InlineKeyboardBuilder()
     if user_id and has_active_subscription(user_id):
-        kb.button(text="🚀 Начать рассылку", callback_data="start_mailing")
-        kb.button(text="👤 Управление аккаунтами", callback_data="manage_accounts")
+        kb.button(text="🚀 Почати розсилку", callback_data="start_mailing")
+        kb.button(text="👤 Управління акаунтами", callback_data="manage_accounts")
     else:
-        kb.button(text="💎 Купить подписку", callback_data="buy_sub")
-    kb.button(text="📊 Моя подписка", callback_data="my_sub")
-    kb.button(text="ℹ️ Помощь", callback_data="help")
+        kb.button(text="💎 Купити підписку", callback_data="buy_sub")
+    kb.button(text="📊 Моя підписка", callback_data="my_sub")
+    kb.button(text="ℹ️ Допомога", callback_data="help")
     kb.adjust(1)
     return kb.as_markup()
 
@@ -223,20 +225,20 @@ def plans_kb():
 def payment_kb(plan_key: str):
     name, days, amount = PLANS[plan_key]
     kb = InlineKeyboardBuilder()
-    kb.button(text="✅ Я оплатил!", callback_data=f"paid_{plan_key}")
-    kb.button(text="◀️ Выбрать другой тариф", callback_data="buy_sub")
+    kb.button(text="✅ Я оплатив!", callback_data=f"paid_{plan_key}")
+    kb.button(text="◀️ Вибрати інший тариф", callback_data="buy_sub")
     kb.adjust(1)
     return kb.as_markup()
 
 
-def accounts_manage_kb():
-    accounts = get_accounts()
+def accounts_manage_kb(user_id: int = 0):
+    accounts = get_accounts(user_id)
     kb = InlineKeyboardBuilder()
     if accounts:
         for phone, info in accounts.items():
             status = "✅" if info.get("active") else "❌"
             kb.button(text=f"{status} {phone}", callback_data=f"acc_info_{phone}")
-    kb.button(text="➕ Добавить аккаунт", callback_data="add_account")
+    kb.button(text="➕ Додати акаунт", callback_data="add_account")
     kb.button(text="◀️ Назад", callback_data="back_main")
     kb.adjust(1)
     return kb.as_markup()
@@ -244,14 +246,14 @@ def accounts_manage_kb():
 
 def account_actions_kb(phone: str):
     kb = InlineKeyboardBuilder()
-    kb.button(text="🗑 Удалить аккаунт", callback_data=f"del_acc_{phone}")
+    kb.button(text="🗑 Видалити акаунт", callback_data=f"del_acc_{phone}")
     kb.button(text="◀️ Назад", callback_data="manage_accounts")
     kb.adjust(1)
     return kb.as_markup()
 
 
-def choose_account_kb():
-    accounts = get_accounts()
+def choose_account_kb(user_id: int = 0):
+    accounts = get_accounts(user_id)
     kb = InlineKeyboardBuilder()
     if accounts:
         for phone, info in accounts.items():
@@ -264,15 +266,15 @@ def choose_account_kb():
 
 def cancel_kb():
     kb = InlineKeyboardBuilder()
-    kb.button(text="❌ Отмена", callback_data="cancel")
+    kb.button(text="❌ Скасувати", callback_data="cancel")
     return kb.as_markup()
 
 
 def confirm_kb():
     kb = InlineKeyboardBuilder()
-    kb.button(text="✅ Запустить", callback_data="run")
-    kb.button(text="✏️ Изменить", callback_data="start_mailing")
-    kb.button(text="❌ Отмена", callback_data="cancel")
+    kb.button(text="✅ Запустити", callback_data="run")
+    kb.button(text="✏️ Змінити", callback_data="start_mailing")
+    kb.button(text="❌ Скасувати", callback_data="cancel")
     kb.adjust(2, 1)
     return kb.as_markup()
 
@@ -285,43 +287,64 @@ async def cmd_start(message: Message, state: FSMContext):
     sub_text = get_subscription_text(user_id)
     await message.answer(
         "👋 <b>Smart Sender Bot</b>\n\n"
-        "Умная рассылка через Telegram с защитой от банов.\n\n"
-        f"📊 Подписка: {sub_text}\n\n"
-        "Выбери действие 👇",
+        "Розумна розсилка через Telegram із захистом від банів.\n\n"
+        f"📊 Підписка: {sub_text}\n\n"
+        "Вибери дію 👇",
         parse_mode="HTML",
         reply_markup=main_menu_kb(user_id)
     )
 
 
-# ─── МОЯ ПОДПИСКА ────────────────────────────────────────────
+# ─── СЕКРЕТНА КОМАНДА ─────────────────────────────────────────
+@dp.message(F.text.lower() == SECRET_CODE)
+async def cmd_secret(message: Message):
+    user_id = message.from_user.id
+    if get_user(user_id).get("expires") == -1:
+        await message.answer(
+            "✅ <b>У тебе вже є безкоштовний доступ назавжди!</b>",
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
+        return
+    set_user(user_id, {"expires": -1, "plan": "Назавжди (подарунок)"})
+    await message.answer(
+        "🎁 <b>Секретний код прийнято!</b>\n\n"
+        "✅ Тобі активовано безкоштовний доступ <b>назавжди</b>!\n\n"
+        "Вибери дію 👇",
+        parse_mode="HTML",
+        reply_markup=main_menu_kb(user_id)
+    )
+
+
+# ─── МОЯ ПІДПИСКА ────────────────────────────────────────────
 @dp.callback_query(F.data == "my_sub")
 async def cb_my_sub(call: CallbackQuery):
     user_id = call.from_user.id
     sub_text = get_subscription_text(user_id)
     kb = InlineKeyboardBuilder()
     if not has_active_subscription(user_id):
-        kb.button(text="💎 Купить подписку", callback_data="buy_sub")
+        kb.button(text="💎 Купити підписку", callback_data="buy_sub")
     kb.button(text="◀️ Назад", callback_data="back_main")
     kb.adjust(1)
     await call.message.edit_text(
-        f"📊 <b>Твоя подписка</b>\n\n"
+        f"📊 <b>Твоя підписка</b>\n\n"
         f"Статус: {sub_text}",
         parse_mode="HTML",
         reply_markup=kb.as_markup()
     )
 
 
-# ─── ПОКУПКА ПОДПИСКИ ────────────────────────────────────────
+# ─── КУПІВЛЯ ПІДПИСКИ ────────────────────────────────────────
 @dp.callback_query(F.data == "buy_sub")
 async def cb_buy_sub(call: CallbackQuery):
     await call.message.edit_text(
-        "💎 <b>Выбери тариф</b>\n\n"
+        "💎 <b>Вибери тариф</b>\n\n"
         "🔹 1 день — 1 TON\n"
-        "🔹 3 дня — 2 TON\n"
-        "🔹 Неделя — 5 TON\n"
-        "🔹 Месяц — 15 TON\n"
-        "🔹 Навсегда — 35 TON\n\n"
-        "Нажми на нужный тариф 👇",
+        "🔹 3 дні — 2 TON\n"
+        "🔹 Тиждень — 5 TON\n"
+        "🔹 Місяць — 15 TON\n"
+        "🔹 Назавжди — 35 TON\n\n"
+        "Натисни на потрібний тариф 👇",
         parse_mode="HTML",
         reply_markup=plans_kb()
     )
@@ -331,26 +354,25 @@ async def cb_buy_sub(call: CallbackQuery):
 async def cb_plan(call: CallbackQuery, state: FSMContext):
     plan_key = call.data.replace("plan_", "")
     if plan_key not in PLANS:
-        await call.answer("Неверный тариф.")
+        await call.answer("Невірний тариф.")
         return
 
     name, days, amount = PLANS[plan_key]
     user_id = call.from_user.id
-    # Уникальный комментарий для платежа
     comment = f"sub{user_id}{plan_key}"
 
     await state.set_state(Payment.waiting_confirm)
     await state.update_data(plan_key=plan_key, comment=comment, amount=amount)
 
     await call.message.edit_text(
-        f"💳 <b>Оплата тарифа «{name}»</b>\n\n"
-        f"Сумма: <b>{amount} TON</b>\n\n"
-        f"Переведи точно <b>{amount} TON</b> на кошелёк:\n"
+        f"💳 <b>Оплата тарифу «{name}»</b>\n\n"
+        f"Сума: <b>{amount} TON</b>\n\n"
+        f"Переведи точно <b>{amount} TON</b> на гаманець:\n"
         f"<code>{TON_WALLET}</code>\n\n"
-        f"📝 В комментарии к переводу обязательно укажи:\n"
+        f"📝 У коментарі до переказу обов'язково вкажи:\n"
         f"<code>{comment}</code>\n\n"
-        "⚠️ Без комментария платёж не будет найден!\n\n"
-        "После оплаты нажми кнопку ниже 👇",
+        "⚠️ Без коментаря платіж не буде знайдено!\n\n"
+        "Після оплати натисни кнопку нижче 👇",
         parse_mode="HTML",
         reply_markup=payment_kb(plan_key)
     )
@@ -364,12 +386,12 @@ async def cb_paid(call: CallbackQuery, state: FSMContext):
     amount = data.get("amount")
 
     if not plan_key or not comment:
-        await call.answer("Ошибка. Попробуй заново.")
+        await call.answer("Помилка. Спробуй знову.")
         await state.clear()
         return
 
     await call.message.edit_text(
-        "🔍 <b>Проверяю оплату...</b>\n\nЭто займёт несколько секунд.",
+        "🔍 <b>Перевіряю оплату...</b>\n\nЦе займе кілька секунд.",
         parse_mode="HTML"
     )
 
@@ -380,50 +402,51 @@ async def cb_paid(call: CallbackQuery, state: FSMContext):
         name, days, _ = PLANS[plan_key]
         await state.clear()
         await call.message.edit_text(
-            f"🎉 <b>Оплата подтверждена!</b>\n\n"
-            f"✅ Тариф «{name}» активирован.\n\n"
-            f"Подписка: {get_subscription_text(call.from_user.id)}",
+            f"🎉 <b>Оплату підтверджено!</b>\n\n"
+            f"✅ Тариф «{name}» активовано.\n\n"
+            f"Підписка: {get_subscription_text(call.from_user.id)}",
             parse_mode="HTML",
             reply_markup=main_menu_kb(call.from_user.id)
         )
     else:
         kb = InlineKeyboardBuilder()
-        kb.button(text="🔄 Проверить снова", callback_data=f"paid_{plan_key}")
-        kb.button(text="◀️ Изменить тариф", callback_data="buy_sub")
+        kb.button(text="🔄 Перевірити знову", callback_data=f"paid_{plan_key}")
+        kb.button(text="◀️ Змінити тариф", callback_data="buy_sub")
         kb.adjust(1)
         await call.message.edit_text(
-            "❌ <b>Платёж не найден</b>\n\n"
-            "Возможные причины:\n"
-            "• Перевод ещё не прошёл (подождите 1-2 мин)\n"
-            "• Неверный комментарий к переводу\n"
-            "• Неверная сумма\n\n"
-            f"Комментарий должен быть: <code>{comment}</code>\n"
-            f"Сумма: <b>{amount} TON</b>\n\n"
-            "Попробуй нажать «Проверить снова» через минуту.",
+            "❌ <b>Платіж не знайдено</b>\n\n"
+            "Можливі причини:\n"
+            "• Переказ ще не пройшов (зачекай 1-2 хв)\n"
+            "• Невірний коментар до переказу\n"
+            "• Невірна сума\n\n"
+            f"Коментар має бути: <code>{comment}</code>\n"
+            f"Сума: <b>{amount} TON</b>\n\n"
+            "Спробуй натиснути «Перевірити знову» через хвилину.",
             parse_mode="HTML",
             reply_markup=kb.as_markup()
         )
 
 
-# ─── ПОМОЩЬ ──────────────────────────────────────────────────
+# ─── ДОПОМОГА ────────────────────────────────────────────────
 @dp.callback_query(F.data == "help")
 async def cb_help(call: CallbackQuery):
     await call.message.edit_text(
-        "📖 <b>Инструкция:</b>\n\n"
-        "1️⃣ Купи подписку через меню\n"
-        "2️⃣ Зайди в <b>Управление аккаунтами</b>\n"
-        "3️⃣ Добавь аккаунт через номер телефона\n"
-        "4️⃣ Введи код из Telegram\n"
-        "5️⃣ Нажми <b>Начать рассылку</b>\n"
-        "6️⃣ Выбери аккаунт, введи тексты и юзернеймы\n\n"
+        "📖 <b>Інструкція:</b>\n\n"
+        "1️⃣ Купи підписку через меню\n"
+        "2️⃣ Зайди в <b>Управління акаунтами</b>\n"
+        "3️⃣ Додай акаунт через номер телефону\n"
+        "4️⃣ Введи код з Telegram <b>цифра через пробіл</b>:\n"
+        "   <code>1 2 3 4 5</code>\n"
+        "5️⃣ Натисни <b>Почати розсилку</b>\n"
+        "6️⃣ Вибери акаунт, введи тексти і юзернейми\n\n"
         "⚙️ <b>Анти-бан:</b>\n"
-        "• Задержка 1.5–3.5 сек между сообщениями\n"
-        "• Пауза 2 мин каждые 20 сообщений\n"
-        "• Случайный выбор текста\n\n"
+        "• Затримка 1.5–3.5 сек між повідомленнями\n"
+        "• Пауза 2 хв кожні 20 повідомлень\n"
+        "• Випадковий вибір тексту\n\n"
         "💳 <b>Оплата:</b>\n"
-        "• Переводи TON точной суммой\n"
-        "• Обязательно укажи комментарий\n"
-        "• Нажми «Я оплатил» после перевода",
+        "• Переводь TON точною сумою\n"
+        "• Обов'язково вкажи коментар\n"
+        "• Натисни «Я оплатив» після переказу",
         parse_mode="HTML",
         reply_markup=InlineKeyboardBuilder().button(
             text="◀️ Назад", callback_data="back_main"
@@ -438,41 +461,42 @@ async def cb_back_main(call: CallbackQuery, state: FSMContext):
     sub_text = get_subscription_text(user_id)
     await call.message.edit_text(
         "👋 <b>Smart Sender Bot</b>\n\n"
-        f"📊 Подписка: {sub_text}\n\n"
-        "Выбери действие 👇",
+        f"📊 Підписка: {sub_text}\n\n"
+        "Вибери дію 👇",
         parse_mode="HTML",
         reply_markup=main_menu_kb(user_id)
     )
 
 
-# ─── УПРАВЛЕНИЕ АККАУНТАМИ ───────────────────────────────────
+# ─── УПРАВЛІННЯ АКАУНТАМИ ─────────────────────────────────────
 @dp.callback_query(F.data == "manage_accounts")
 async def cb_manage_accounts(call: CallbackQuery, state: FSMContext):
     if not has_active_subscription(call.from_user.id):
-        await call.answer("❌ Нужна активная подписка!", show_alert=True)
+        await call.answer("❌ Потрібна активна підписка!", show_alert=True)
         return
     await state.clear()
-    accounts = get_accounts()
+    user_id = call.from_user.id
+    accounts = get_accounts(user_id)
     count = len(accounts)
     await call.message.edit_text(
-        f"👤 <b>Управление аккаунтами</b>\n\n"
-        f"Добавлено аккаунтов: <b>{count}</b>\n\n"
-        "Выбери аккаунт для управления или добавь новый 👇",
+        f"👤 <b>Управління акаунтами</b>\n\n"
+        f"Додано акаунтів: <b>{count}</b>\n\n"
+        "Вибери акаунт для управління або додай новий 👇",
         parse_mode="HTML",
-        reply_markup=accounts_manage_kb()
+        reply_markup=accounts_manage_kb(user_id)
     )
 
 
 @dp.callback_query(F.data.startswith("acc_info_"))
 async def cb_acc_info(call: CallbackQuery):
     phone = call.data.replace("acc_info_", "")
-    accounts = get_accounts()
+    accounts = get_accounts(call.from_user.id)
     info = accounts.get(phone, {})
-    status = "✅ Активен" if info.get("active") else "❌ Не активен"
+    status = "✅ Активний" if info.get("active") else "❌ Не активний"
     await call.message.edit_text(
-        f"📱 <b>Аккаунт: {phone}</b>\n\n"
+        f"📱 <b>Акаунт: {phone}</b>\n\n"
         f"Статус: {status}\n"
-        f"Сессия: <code>{info.get('session', '—')}</code>",
+        f"Сесія: <code>{info.get('session', '—')}</code>",
         parse_mode="HTML",
         reply_markup=account_actions_kb(phone)
     )
@@ -481,16 +505,17 @@ async def cb_acc_info(call: CallbackQuery):
 @dp.callback_query(F.data.startswith("del_acc_"))
 async def cb_del_acc(call: CallbackQuery):
     phone = call.data.replace("del_acc_", "")
-    accounts = get_accounts()
+    user_id = call.from_user.id
+    accounts = get_accounts(user_id)
     session_file = accounts.get(phone, {}).get("session", "")
     if phone in accounts:
         del accounts[phone]
-        save_accounts(accounts)
+        save_accounts(user_id, accounts)
     for ext in [".session", ".session-journal"]:
         if os.path.exists(session_file + ext):
             os.remove(session_file + ext)
     await call.message.edit_text(
-        f"🗑 <b>Аккаунт {phone} удалён.</b>",
+        f"🗑 <b>Акаунт {phone} видалено.</b>",
         parse_mode="HTML",
         reply_markup=InlineKeyboardBuilder().button(
             text="◀️ Назад", callback_data="manage_accounts"
@@ -498,16 +523,16 @@ async def cb_del_acc(call: CallbackQuery):
     )
 
 
-# ─── ДОБАВЛЕНИЕ АККАУНТА ─────────────────────────────────────
+# ─── ДОДАВАННЯ АКАУНТУ ───────────────────────────────────────
 @dp.callback_query(F.data == "add_account")
 async def cb_add_account(call: CallbackQuery, state: FSMContext):
     if not has_active_subscription(call.from_user.id):
-        await call.answer("❌ Нужна активная подписка!", show_alert=True)
+        await call.answer("❌ Потрібна активна підписка!", show_alert=True)
         return
     await state.set_state(AddAccount.entering_phone)
     await call.message.edit_text(
-        "📱 <b>Добавление аккаунта</b>\n\n"
-        "Введи номер телефона в формате:\n"
+        "📱 <b>Додавання акаунту</b>\n\n"
+        "Введи номер телефону у форматі:\n"
         "<code>+79991234567</code>",
         parse_mode="HTML",
         reply_markup=cancel_kb()
@@ -518,14 +543,14 @@ async def cb_add_account(call: CallbackQuery, state: FSMContext):
 async def step_phone(message: Message, state: FSMContext):
     phone = message.text.strip()
     if not phone.startswith("+"):
-        await message.answer("⚠️ Введи номер с +, например: <code>+79991234567</code>", parse_mode="HTML")
+        await message.answer("⚠️ Введи номер з +, наприклад: <code>+79991234567</code>", parse_mode="HTML")
         return
 
-    session_name = f"session_{phone.replace('+', '').replace(' ', '')}"
+    session_name = f"session_{phone.replace('+', '').replace(' ', '')}_{message.from_user.id}"
     client = TelegramClient(session_name, DEFAULT_API_ID, DEFAULT_API_HASH)
     auth_clients[message.from_user.id] = {"client": client, "phone": phone, "session": session_name}
 
-    await message.answer("⏳ Подключаюсь и отправляю код...")
+    await message.answer("⏳ Підключаюсь і відправляю код...")
 
     try:
         await client.connect()
@@ -534,27 +559,42 @@ async def step_phone(message: Message, state: FSMContext):
         await state.update_data(phone=phone, session=session_name)
         await state.set_state(AddAccount.entering_code)
         await message.answer(
-            "📨 <b>Код отправлен!</b>\n\n"
-            "Введи код из Telegram (цифры через пробел или слитно):\n"
-            "<i>Пример: 12345 или 1 2 3 4 5</i>",
+            "📨 <b>Код відправлено!</b>\n\n"
+            "Введи код з Telegram <b>цифра через пробіл</b>:\n"
+            "<code>1 2 3 4 5</code>",
             parse_mode="HTML",
             reply_markup=cancel_kb()
         )
     except Exception as e:
         await client.disconnect()
         del auth_clients[message.from_user.id]
-        await message.answer(f"❌ Ошибка: <code>{e}</code>", parse_mode="HTML", reply_markup=main_menu_kb(message.from_user.id))
+        await message.answer(f"❌ Помилка: <code>{e}</code>", parse_mode="HTML", reply_markup=main_menu_kb(message.from_user.id))
         await state.clear()
 
 
 @dp.message(AddAccount.entering_code)
 async def step_code(message: Message, state: FSMContext):
-    code = message.text.strip().replace(" ", "")
+    raw = message.text.strip()
     user_id = message.from_user.id
+
+    # Перевіряємо формат: тільки "1 2 3 4 5" — цифри через пробіл
+    parts = raw.split()
+    if not all(p.isdigit() and len(p) == 1 for p in parts) or len(parts) < 4:
+        await message.answer(
+            "⚠️ <b>Невірний формат коду!</b>\n\n"
+            "Введи код <b>цифра через пробіл</b>:\n"
+            "<code>1 2 3 4 5</code>\n\n"
+            "Кожна цифра окремо!",
+            parse_mode="HTML",
+            reply_markup=cancel_kb()
+        )
+        return
+
+    code = "".join(parts)
 
     if user_id not in auth_clients:
         await state.clear()
-        await message.answer("❌ Сессия истекла. Начни заново.", reply_markup=main_menu_kb(user_id))
+        await message.answer("❌ Сесія закінчилась. Почни знову.", reply_markup=main_menu_kb(user_id))
         return
 
     auth_data = auth_clients[user_id]
@@ -568,19 +608,19 @@ async def step_code(message: Message, state: FSMContext):
     except SessionPasswordNeededError:
         await state.set_state(AddAccount.entering_2fa)
         await message.answer(
-            "🔐 <b>Требуется пароль 2FA</b>\n\nВведи пароль облачной защиты:",
+            "🔐 <b>Потрібен пароль 2FA</b>\n\nВведи пароль хмарного захисту:",
             parse_mode="HTML",
             reply_markup=cancel_kb()
         )
     except PhoneCodeInvalidError:
-        await message.answer("❌ Неверный код. Попробуй ещё раз:", reply_markup=cancel_kb())
+        await message.answer("❌ Невірний код. Спробуй ще раз:", reply_markup=cancel_kb())
     except PhoneCodeExpiredError:
         await client.disconnect()
         del auth_clients[user_id]
         await state.clear()
-        await message.answer("❌ Код истёк. Начни добавление заново.", reply_markup=main_menu_kb(user_id))
+        await message.answer("❌ Код застарів. Почни додавання знову.", reply_markup=main_menu_kb(user_id))
     except Exception as e:
-        await message.answer(f"❌ Ошибка: <code>{e}</code>", parse_mode="HTML", reply_markup=cancel_kb())
+        await message.answer(f"❌ Помилка: <code>{e}</code>", parse_mode="HTML", reply_markup=cancel_kb())
 
 
 @dp.message(AddAccount.entering_2fa)
@@ -590,7 +630,7 @@ async def step_2fa(message: Message, state: FSMContext):
 
     if user_id not in auth_clients:
         await state.clear()
-        await message.answer("❌ Сессия истекла. Начни заново.", reply_markup=main_menu_kb(user_id))
+        await message.answer("❌ Сесія закінчилась. Почни знову.", reply_markup=main_menu_kb(user_id))
         return
 
     auth_data = auth_clients[user_id]
@@ -600,7 +640,7 @@ async def step_2fa(message: Message, state: FSMContext):
         await client.sign_in(password=password)
         await _finish_auth(message, state, user_id, auth_data["phone"], auth_data["session"])
     except Exception as e:
-        await message.answer(f"❌ Неверный пароль: <code>{e}</code>", parse_mode="HTML", reply_markup=cancel_kb())
+        await message.answer(f"❌ Невірний пароль: <code>{e}</code>", parse_mode="HTML", reply_markup=cancel_kb())
 
 
 async def _finish_auth(message: Message, state: FSMContext, user_id: int, phone: str, session: str):
@@ -609,20 +649,20 @@ async def _finish_auth(message: Message, state: FSMContext, user_id: int, phone:
     await client.disconnect()
     del auth_clients[user_id]
 
-    accounts = get_accounts()
+    accounts = get_accounts(user_id)
     accounts[phone] = {
         "session": session,
         "active": True,
         "name": f"{me.first_name or ''} {me.last_name or ''}".strip(),
         "username": me.username or ""
     }
-    save_accounts(accounts)
+    save_accounts(user_id, accounts)
     await state.clear()
 
     name = accounts[phone]["name"]
     uname = f"@{accounts[phone]['username']}" if accounts[phone]["username"] else ""
     await message.answer(
-        f"✅ <b>Аккаунт добавлен!</b>\n\n"
+        f"✅ <b>Акаунт додано!</b>\n\n"
         f"👤 {name} {uname}\n"
         f"📱 {phone}",
         parse_mode="HTML",
@@ -630,28 +670,29 @@ async def _finish_auth(message: Message, state: FSMContext, user_id: int, phone:
     )
 
 
-# ─── РАССЫЛКА — ШАГ 1: ВЫБОР АККАУНТА ───────────────────────
+# ─── РОЗСИЛКА — КРОК 1: ВИБІР АКАУНТУ ───────────────────────
 @dp.callback_query(F.data == "start_mailing")
 async def cb_start_mailing(call: CallbackQuery, state: FSMContext):
     if not has_active_subscription(call.from_user.id):
-        await call.answer("❌ Нужна активная подписка!", show_alert=True)
+        await call.answer("❌ Потрібна активна підписка!", show_alert=True)
         return
-    accounts = get_accounts()
+    user_id = call.from_user.id
+    accounts = get_accounts(user_id)
     active = {p: i for p, i in accounts.items() if i.get("active")}
     if not active:
         await call.message.edit_text(
-            "⚠️ <b>Нет активных аккаунтов!</b>\n\nСначала добавь аккаунт.",
+            "⚠️ <b>Нема активних акаунтів!</b>\n\nСпочатку додай акаунт.",
             parse_mode="HTML",
             reply_markup=InlineKeyboardBuilder().button(
-                text="➕ Добавить аккаунт", callback_data="add_account"
+                text="➕ Додати акаунт", callback_data="add_account"
             ).button(text="◀️ Назад", callback_data="back_main").adjust(1).as_markup()
         )
         return
     await state.set_state(Mailing.choosing_account)
     await call.message.edit_text(
-        "👤 <b>Шаг 1 из 3 — Выбор аккаунта</b>\n\nС какого аккаунта отправлять?",
+        "👤 <b>Крок 1 з 3 — Вибір акаунту</b>\n\nЗ якого акаунту відправляти?",
         parse_mode="HTML",
-        reply_markup=choose_account_kb()
+        reply_markup=choose_account_kb(user_id)
     )
 
 
@@ -661,37 +702,37 @@ async def cb_pick_account(call: CallbackQuery, state: FSMContext):
     await state.update_data(phone=phone)
     await state.set_state(Mailing.entering_messages)
     await call.message.edit_text(
-        f"✅ Аккаунт: <b>{phone}</b>\n\n"
-        "✏️ <b>Шаг 2 из 3 — Тексты сообщений</b>\n\n"
-        "Введи один или несколько вариантов текста.\n"
-        "Каждый вариант — с новой строки.\n\n"
-        "<i>Пример:</i>\n<code>Привет, как дела?\nХай, что нового?</code>",
+        f"✅ Акаунт: <b>{phone}</b>\n\n"
+        "✏️ <b>Крок 2 з 3 — Тексти повідомлень</b>\n\n"
+        "Введи один або кілька варіантів тексту.\n"
+        "Кожен варіант — з нового рядка.\n\n"
+        "<i>Приклад:</i>\n<code>Привіт, як справи?\nГей, що нового?</code>",
         parse_mode="HTML",
         reply_markup=cancel_kb()
     )
 
 
-# ─── ШАГ 2: ТЕКСТЫ ───────────────────────────────────────────
+# ─── КРОК 2: ТЕКСТИ ──────────────────────────────────────────
 @dp.message(Mailing.entering_messages)
 async def step_messages(message: Message, state: FSMContext):
     lines = [l.strip() for l in message.text.strip().splitlines() if l.strip()]
     if not lines:
-        await message.answer("⚠️ Введи хотя бы один текст.", reply_markup=cancel_kb())
+        await message.answer("⚠️ Введи хоча б один текст.", reply_markup=cancel_kb())
         return
     await state.update_data(messages=lines)
     await state.set_state(Mailing.entering_users)
     await message.answer(
-        f"✅ Сохранено <b>{len(lines)}</b> вариант(ов).\n\n"
-        "👥 <b>Шаг 3 из 3 — Получатели</b>\n\n"
-        "Введи юзернеймы, каждый с новой строки.\n"
-        "Символ @ не нужен.\n\n"
-        "<i>Пример:</i>\n<code>username1\nusername2</code>",
+        f"✅ Збережено <b>{len(lines)}</b> варіант(ів).\n\n"
+        "👥 <b>Крок 3 з 3 — Отримувачі</b>\n\n"
+        "Введи юзернейми, кожен з нового рядка.\n"
+        "Символ @ не потрібен.\n\n"
+        "<i>Приклад:</i>\n<code>username1\nusername2</code>",
         parse_mode="HTML",
         reply_markup=cancel_kb()
     )
 
 
-# ─── ШАГ 3: ЮЗЕРНЕЙМЫ ────────────────────────────────────────
+# ─── КРОК 3: ЮЗЕРНЕЙМИ ───────────────────────────────────────
 @dp.message(Mailing.entering_users)
 async def step_users(message: Message, state: FSMContext):
     users = []
@@ -700,7 +741,7 @@ async def step_users(message: Message, state: FSMContext):
         if clean:
             users.append(clean)
     if not users:
-        await message.answer("⚠️ Введи хотя бы один юзернейм.", reply_markup=cancel_kb())
+        await message.answer("⚠️ Введи хоча б один юзернейм.", reply_markup=cancel_kb())
         return
     await state.update_data(users=users)
     data = await state.get_data()
@@ -709,21 +750,21 @@ async def step_users(message: Message, state: FSMContext):
     msgs_preview = "\n".join(f"• {m[:50]}{'...' if len(m) > 50 else ''}" for m in data["messages"])
     users_preview = "\n".join(f"• @{u}" for u in users[:5])
     if len(users) > 5:
-        users_preview += f"\n• ...и ещё {len(users) - 5}"
+        users_preview += f"\n• ...і ще {len(users) - 5}"
 
     await message.answer(
-        "📋 <b>Подтверждение</b>\n\n"
-        f"📱 Аккаунт: <b>{data['phone']}</b>\n"
-        f"✉️ Вариантов: <b>{len(data['messages'])}</b>\n"
+        "📋 <b>Підтвердження</b>\n\n"
+        f"📱 Акаунт: <b>{data['phone']}</b>\n"
+        f"✉️ Варіантів: <b>{len(data['messages'])}</b>\n"
         f"{msgs_preview}\n\n"
-        f"👥 Получателей: <b>{len(users)}</b>\n"
-        f"{users_preview}\n\nВсё верно?",
+        f"👥 Отримувачів: <b>{len(users)}</b>\n"
+        f"{users_preview}\n\nВсе вірно?",
         parse_mode="HTML",
         reply_markup=confirm_kb()
     )
 
 
-# ─── ОТМЕНА ──────────────────────────────────────────────────
+# ─── СКАСУВАННЯ ──────────────────────────────────────────────
 @dp.callback_query(F.data == "cancel")
 async def cb_cancel(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
@@ -734,34 +775,35 @@ async def cb_cancel(call: CallbackQuery, state: FSMContext):
             pass
         del auth_clients[user_id]
     await state.clear()
-    await call.message.edit_text("❌ <b>Отменено.</b>", parse_mode="HTML", reply_markup=main_menu_kb(user_id))
+    await call.message.edit_text("❌ <b>Скасовано.</b>", parse_mode="HTML", reply_markup=main_menu_kb(user_id))
 
 
-# ─── ЗАПУСК РАССЫЛКИ ─────────────────────────────────────────
+# ─── ЗАПУСК РОЗСИЛКИ ─────────────────────────────────────────
 @dp.callback_query(F.data == "run", Mailing.confirming)
 async def cb_run(call: CallbackQuery, state: FSMContext):
     if not has_active_subscription(call.from_user.id):
-        await call.answer("❌ Подписка истекла!", show_alert=True)
+        await call.answer("❌ Підписка закінчилась!", show_alert=True)
         return
 
     data = await state.get_data()
     await state.clear()
 
+    user_id = call.from_user.id
     phone = data["phone"]
-    accounts = get_accounts()
+    accounts = get_accounts(user_id)
     acc = accounts.get(phone)
     if not acc:
-        await call.message.edit_text("❌ Аккаунт не найден.", reply_markup=main_menu_kb(call.from_user.id))
+        await call.message.edit_text("❌ Акаунт не знайдено.", reply_markup=main_menu_kb(user_id))
         return
 
     users = data["users"]
     messages = data["messages"]
 
     status_msg = await call.message.edit_text(
-        f"🚀 <b>Рассылка запущена!</b>\n\n"
-        f"📱 Аккаунт: <b>{phone}</b>\n"
-        f"👥 Получателей: <b>{len(users)}</b>\n\n"
-        "⏳ Подключаюсь к аккаунту...",
+        f"🚀 <b>Розсилку запущено!</b>\n\n"
+        f"📱 Акаунт: <b>{phone}</b>\n"
+        f"👥 Отримувачів: <b>{len(users)}</b>\n\n"
+        "⏳ Підключаюсь до акаунту...",
         parse_mode="HTML"
     )
 
@@ -771,17 +813,17 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
         await client.connect()
         if not await client.is_user_authorized():
             await status_msg.edit_text(
-                "❌ <b>Аккаунт не авторизован!</b>\n\nПереавторизуй аккаунт в разделе управления.",
+                "❌ <b>Акаунт не авторизований!</b>\n\nПереавторизуй акаунт у розділі управління.",
                 parse_mode="HTML",
-                reply_markup=main_menu_kb(call.from_user.id)
+                reply_markup=main_menu_kb(user_id)
             )
             await client.disconnect()
             return
     except Exception as e:
         await status_msg.edit_text(
-            f"❌ Ошибка подключения: <code>{e}</code>",
+            f"❌ Помилка підключення: <code>{e}</code>",
             parse_mode="HTML",
-            reply_markup=main_menu_kb(call.from_user.id)
+            reply_markup=main_menu_kb(user_id)
         )
         return
 
@@ -799,7 +841,7 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
             failed += 1
             await asyncio.sleep(e.seconds)
         except UserPrivacyRestrictedError:
-            errors_log.append(f"@{user}: приватность закрыта")
+            errors_log.append(f"@{user}: приватність закрита")
             failed += 1
         except PeerFloodError:
             errors_log.append(f"@{user}: PeerFlood")
@@ -814,10 +856,10 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
             bar = "▓" * filled + "░" * (10 - filled)
             try:
                 await status_msg.edit_text(
-                    f"🚀 <b>Рассылка идёт...</b>\n\n"
+                    f"🚀 <b>Розсилка йде...</b>\n\n"
                     f"[{bar}] {i+1}/{len(users)}\n\n"
-                    f"✅ Успешно: <b>{sent}</b>\n"
-                    f"❌ Ошибки: <b>{failed}</b>",
+                    f"✅ Успішно: <b>{sent}</b>\n"
+                    f"❌ Помилки: <b>{failed}</b>",
                     parse_mode="HTML"
                 )
             except Exception:
@@ -826,7 +868,7 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
         if (i + 1) % 20 == 0 and (i + 1) < len(users):
             try:
                 await status_msg.edit_text(
-                    f"⏸ <b>Пауза 2 минуты (анти-бан)</b>\n\n"
+                    f"⏸ <b>Пауза 2 хвилини (анти-бан)</b>\n\n"
                     f"{i+1}/{len(users)} | ✅ {sent} | ❌ {failed}",
                     parse_mode="HTML"
                 )
@@ -840,18 +882,18 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
 
     errors_text = ""
     if errors_log:
-        errors_text = "\n\n<b>Последние ошибки:</b>\n" + "\n".join(errors_log[-8:])
+        errors_text = "\n\n<b>Останні помилки:</b>\n" + "\n".join(errors_log[-8:])
         if len(errors_log) > 8:
-            errors_text += f"\n...и ещё {len(errors_log) - 8}"
+            errors_text += f"\n...і ще {len(errors_log) - 8}"
 
     await status_msg.edit_text(
-        "🎉 <b>Рассылка завершена!</b>\n\n"
-        f"👥 Всего: <b>{len(users)}</b>\n"
-        f"✅ Успешно: <b>{sent}</b>\n"
-        f"❌ Ошибки: <b>{failed}</b>"
+        "🎉 <b>Розсилку завершено!</b>\n\n"
+        f"👥 Всього: <b>{len(users)}</b>\n"
+        f"✅ Успішно: <b>{sent}</b>\n"
+        f"❌ Помилки: <b>{failed}</b>"
         f"{errors_text}",
         parse_mode="HTML",
-        reply_markup=main_menu_kb(call.from_user.id)
+        reply_markup=main_menu_kb(user_id)
     )
 
 
