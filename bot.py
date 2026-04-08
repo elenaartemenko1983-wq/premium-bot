@@ -14,7 +14,7 @@ from telethon.errors import FloodWaitError, UserPrivacyRestrictedError, PeerFloo
 logging.basicConfig(level=logging.INFO)
 
 # ─── НАСТРОЙКИ ───────────────────────────────────────────────
-BOT_TOKEN = "ВАШ_BOT_TOKEN"  # Токен от @BotFather
+BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"  # Токен от @BotFather
 
 ACCOUNTS = {
     "1": {"api_id": 30293465,  "api_hash": "647d499195b4186f1068558e435772a9",  "session": "session1", "label": "Аккаунт 1"},
