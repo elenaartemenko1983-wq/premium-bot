@@ -6,7 +6,7 @@ import os
 import time
 import aiohttp
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -30,13 +30,40 @@ STATS_FILE = "stats.json"
 
 # ─── АДМІНИ ──────────────────────────────────────────────────
 # Додай Telegram user_id всіх адмінів
-ADMIN_IDS = [7338481397, 8643268507]  # ← головний і другий адмін
+ADMIN_IDS = [123456789, 987654321]  # ← головний і другий адмін
 
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
 DEFAULT_API_ID = 2040
 DEFAULT_API_HASH = "b18441a1ff607e10a989891a5462e627"
 # ─────────────────────────────────────────────────────────────
+
+# ─── ВІЗУАЛЬНІ РЕСУРСИ ───────────────────────────────────────
+ASSETS_DIR = "bot_assets"
+ASSET_AVATAR   = f"{ASSETS_DIR}/avatar.png"
+ASSET_WELCOME  = f"{ASSETS_DIR}/welcome_banner.gif"
+ASSET_PAYMENT  = f"{ASSETS_DIR}/payment_animation.gif"
+ASSET_MAILING  = f"{ASSETS_DIR}/mailing_progress.gif"
+ASSET_SUCCESS  = f"{ASSETS_DIR}/mailing_success.gif"
+ASSET_SUB_CARD = f"{ASSETS_DIR}/subscription_card.png"
+
+def assets_exist() -> bool:
+    return all(os.path.exists(p) for p in [
+        ASSET_AVATAR, ASSET_WELCOME, ASSET_PAYMENT,
+        ASSET_MAILING, ASSET_SUCCESS, ASSET_SUB_CARD
+    ])
+
+def ensure_assets():
+    """Generate assets if they don't exist yet."""
+    if not assets_exist():
+        logging.info("Generating visual assets...")
+        os.makedirs(ASSETS_DIR, exist_ok=True)
+        try:
+            import subprocess, sys
+            subprocess.run([sys.executable, "generate_assets.py"], check=True)
+            logging.info("Assets generated successfully.")
+        except Exception as e:
+            logging.warning(f"Could not generate assets: {e}")
 
 PLANS = {
     "1d":  {"uk": "1 день",    "ru": "1 день",    "en": "1 day",    "days": 1,  "amount": 1},
@@ -1070,11 +1097,20 @@ async def cmd_start(message: Message, state: FSMContext):
             pass
 
     sub_text = get_subscription_text(user_id)
-    await message.answer(
-        t(user_id, "welcome", sub=sub_text),
-        parse_mode="HTML",
-        reply_markup=main_menu_kb(user_id)
-    )
+    # Відправляємо welcome GIF + текст
+    if os.path.exists(ASSET_WELCOME):
+        await message.answer_animation(
+            FSInputFile(ASSET_WELCOME),
+            caption=t(user_id, "welcome", sub=sub_text),
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
+    else:
+        await message.answer(
+            t(user_id, "welcome", sub=sub_text),
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
 
 
 # ─── НАЛАШТУВАННЯ / МОВА ─────────────────────────────────────
@@ -1109,11 +1145,30 @@ async def cb_my_sub(call: CallbackQuery):
         kb.button(text=t(user_id, "btn_buy_sub"), callback_data="buy_sub")
     kb.button(text=t(user_id, "btn_back"), callback_data="back_main")
     kb.adjust(1)
-    await call.message.edit_text(
-        t(user_id, "my_sub", sub=sub_text),
-        parse_mode="HTML",
-        reply_markup=kb.as_markup()
-    )
+
+    # Генеруємо персональну картку підписки
+    if os.path.exists(ASSET_SUB_CARD):
+        user = get_user(user_id)
+        exp = user.get("expires")
+        is_forever = (exp == -1)
+        days_left = 0
+        plan_name = user.get("plan", "—")
+        if exp and exp != -1 and time.time() < exp:
+            days_left = int((exp - time.time()) // 86400)
+        # Надсилаємо картку як нове фото
+        await call.message.answer_photo(
+            FSInputFile(ASSET_SUB_CARD),
+            caption=t(user_id, "my_sub", sub=sub_text),
+            parse_mode="HTML",
+            reply_markup=kb.as_markup()
+        )
+        await call.message.delete()
+    else:
+        await call.message.edit_text(
+            t(user_id, "my_sub", sub=sub_text),
+            parse_mode="HTML",
+            reply_markup=kb.as_markup()
+        )
 
 
 # ─── КУПІВЛЯ ПІДПИСКИ ────────────────────────────────────────
@@ -1144,11 +1199,21 @@ async def cb_plan(call: CallbackQuery, state: FSMContext):
     await state.set_state(Payment.waiting_confirm)
     await state.update_data(plan_key=plan_key, comment=comment, amount=amount)
 
-    await call.message.edit_text(
-        t(user_id, "payment_text", name=name, amount=amount, wallet=TON_WALLET, comment=comment),
-        parse_mode="HTML",
-        reply_markup=payment_kb(user_id, plan_key)
-    )
+    pay_text = t(user_id, "payment_text", name=name, amount=amount, wallet=TON_WALLET, comment=comment)
+    if os.path.exists(ASSET_PAYMENT):
+        await call.message.answer_animation(
+            FSInputFile(ASSET_PAYMENT),
+            caption=pay_text,
+            parse_mode="HTML",
+            reply_markup=payment_kb(user_id, plan_key)
+        )
+        await call.message.delete()
+    else:
+        await call.message.edit_text(
+            pay_text,
+            parse_mode="HTML",
+            reply_markup=payment_kb(user_id, plan_key)
+        )
 
 
 @dp.callback_query(F.data.startswith("paid_"), Payment.waiting_confirm)
@@ -1540,10 +1605,18 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
     users = data["users"]
     messages = data["messages"]
 
-    status_msg = await call.message.edit_text(
-        t(user_id, "mailing_start", phone=phone, count=len(users)),
-        parse_mode="HTML"
-    )
+    if os.path.exists(ASSET_MAILING):
+        status_msg = await call.message.answer_animation(
+            FSInputFile(ASSET_MAILING),
+            caption=t(user_id, "mailing_start", phone=phone, count=len(users)),
+            parse_mode="HTML"
+        )
+        await call.message.delete()
+    else:
+        status_msg = await call.message.edit_text(
+            t(user_id, "mailing_start", phone=phone, count=len(users)),
+            parse_mode="HTML"
+        )
 
     client = TelegramClient(acc["session"], DEFAULT_API_ID, DEFAULT_API_HASH)
 
@@ -1623,11 +1696,25 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
         if len(errors_log) > 8:
             errors_text += t(user_id, "more_errors", n=len(errors_log) - 8)
 
-    await status_msg.edit_text(
-        t(user_id, "mailing_done", total=len(users), sent=sent, failed=failed) + errors_text,
-        parse_mode="HTML",
-        reply_markup=main_menu_kb(user_id)
-    )
+    done_text = t(user_id, "mailing_done", total=len(users), sent=sent, failed=failed) + errors_text
+    if os.path.exists(ASSET_SUCCESS):
+        await bot.send_animation(
+            user_id,
+            FSInputFile(ASSET_SUCCESS),
+            caption=done_text,
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
+        try:
+            await status_msg.delete()
+        except Exception:
+            pass
+    else:
+        await status_msg.edit_text(
+            done_text,
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
 
 
 # ─── ПРОМОКОДИ (КОРИСТУВАЧ) ──────────────────────────────────
@@ -2086,6 +2173,7 @@ async def subscription_expiry_notifier():
 
 # ─── ЗАПУСК ───────────────────────────────────────────────────
 async def on_startup():
+    ensure_assets()
     asyncio.create_task(subscription_expiry_notifier())
 
 
