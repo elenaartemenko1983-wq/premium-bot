@@ -27,8 +27,6 @@ ACCOUNTS_FILE = "accounts.json"
 USERS_FILE = "users.json"
 PROMO_FILE = "promos.json"
 
-SECRET_CODE = "freeforever"
-
 # ─── АДМІН ───────────────────────────────────────────────────
 # Вкажи свій Telegram user_id тут
 ADMIN_IDS = [7338481397]  # ← замінити на свій ID
