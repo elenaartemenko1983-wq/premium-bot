@@ -25,8 +25,13 @@ logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = "8400914956:AAFM-teR6OTN6C5p-dBsh_Mh110HqzRLaLU"
 ACCOUNTS_FILE = "accounts.json"
 USERS_FILE = "users.json"
+PROMO_FILE = "promos.json"
 
 SECRET_CODE = "freeforever"
+
+# ─── АДМІН ───────────────────────────────────────────────────
+# Вкажи свій Telegram user_id тут
+ADMIN_IDS = [123456789]  # ← замінити на свій ID
 
 TON_WALLET = "UQDHRwgOv-yu6q4b5kQ-Ba6ZGppGOcHp1u9l6rrWb67lPB7W"
 
@@ -153,6 +158,53 @@ TEXTS = {
         "btn_buy_sub": "💎 Купити підписку",
         "no_text": "⚠️ Введи хоча б один текст.",
         "no_users": "⚠️ Введи хоча б один юзернейм.",
+        # Промокоди
+        "enter_promo": "🎟 Введи промокод:",
+        "promo_ok": "🎉 <b>Промокод активовано!</b>\n\n✅ Тариф «{name}» активовано.\n\nПідписка: {sub}",
+        "promo_invalid": "❌ Невірний або вже використаний промокод.",
+        "promo_expired": "❌ Строк дії промокоду закінчився.",
+        "promo_used_up": "❌ Промокод вже вичерпано.",
+        "btn_promo": "🎟 Ввести промокод",
+        # Адмін
+        "not_admin": "⛔ У тебе немає доступу до цього розділу.",
+        "admin_panel": (
+            "🛠 <b>Адмін-панель</b>\n\n"
+            "👥 Всього користувачів: <b>{total}</b>\n"
+            "✅ Активних підписок: <b>{active}</b>\n"
+            "❌ Без підписки: <b>{inactive}</b>\n\n"
+            "Вибери дію 👇"
+        ),
+        "admin_users_list": "👥 <b>Список користувачів</b> (стор. {page}/{pages}):\n\n{users}",
+        "admin_user_info": (
+            "👤 <b>Користувач {user_id}</b>\n"
+            "📛 Ім'я: {name}\n"
+            "🌐 Мова: {lang}\n"
+            "📊 Підписка: {sub}\n"
+            "🗓 Акаунтів: {acc_count}"
+        ),
+        "admin_sub_given": "✅ Підписку «{plan}» видано користувачу {user_id}.",
+        "admin_promo_created": "✅ Промокод <code>{code}</code> створено.\nТариф: {plan}\nВикористань: {uses}",
+        "admin_promo_deleted": "🗑 Промокод {code} видалено.",
+        "admin_promos_list": "🎟 <b>Промокоди:</b>\n\n{promos}",
+        "admin_no_promos": "Промокодів немає.",
+        "admin_enter_uid": "Введи Telegram ID користувача:",
+        "admin_uid_invalid": "❌ Невірний ID. Введи число.",
+        "admin_user_not_found": "❌ Користувача не знайдено.",
+        "admin_choose_plan": "Вибери тариф для видачі:",
+        "admin_enter_promo_code": "Введи текст промокоду (латинські літери/цифри):",
+        "admin_enter_promo_uses": "Скільки разів можна використати? (0 = безліміт):",
+        "admin_enter_promo_plan": "Вибери тариф для промокоду:",
+        "admin_broadcast_enter": "Введи текст для розсилки всім користувачам:",
+        "admin_broadcast_done": "📢 Розсилку завершено. Відправлено: {sent}, помилок: {failed}.",
+        "btn_admin": "🛠 Адмін-панель",
+        "btn_admin_users": "👥 Користувачі",
+        "btn_admin_give_sub": "🎁 Видати підписку",
+        "btn_admin_promos": "🎟 Промокоди",
+        "btn_admin_new_promo": "➕ Новий промокод",
+        "btn_admin_broadcast": "📢 Розсилка",
+        "btn_admin_del_promo": "🗑 Видалити",
+        "btn_prev": "◀️",
+        "btn_next": "▶️",
     },
     "ru": {
         "welcome": "👋 <b>Smart Sender Bot</b>\n\nУмная рассылка через Telegram с защитой от банов.\n\n📊 Подписка: {sub}\n\nВыбери действие 👇",
@@ -262,6 +314,53 @@ TEXTS = {
         "btn_buy_sub": "💎 Купить подписку",
         "no_text": "⚠️ Введи хотя бы один текст.",
         "no_users": "⚠️ Введи хотя бы один юзернейм.",
+        # Промокоды
+        "enter_promo": "🎟 Введи промокод:",
+        "promo_ok": "🎉 <b>Промокод активирован!</b>\n\n✅ Тариф «{name}» активирован.\n\nПодписка: {sub}",
+        "promo_invalid": "❌ Неверный или уже использованный промокод.",
+        "promo_expired": "❌ Срок действия промокода истёк.",
+        "promo_used_up": "❌ Промокод уже исчерпан.",
+        "btn_promo": "🎟 Ввести промокод",
+        # Админ
+        "not_admin": "⛔ У тебя нет доступа к этому разделу.",
+        "admin_panel": (
+            "🛠 <b>Админ-панель</b>\n\n"
+            "👥 Всего пользователей: <b>{total}</b>\n"
+            "✅ Активных подписок: <b>{active}</b>\n"
+            "❌ Без подписки: <b>{inactive}</b>\n\n"
+            "Выбери действие 👇"
+        ),
+        "admin_users_list": "👥 <b>Список пользователей</b> (стр. {page}/{pages}):\n\n{users}",
+        "admin_user_info": (
+            "👤 <b>Пользователь {user_id}</b>\n"
+            "📛 Имя: {name}\n"
+            "🌐 Язык: {lang}\n"
+            "📊 Подписка: {sub}\n"
+            "🗓 Аккаунтов: {acc_count}"
+        ),
+        "admin_sub_given": "✅ Подписка «{plan}» выдана пользователю {user_id}.",
+        "admin_promo_created": "✅ Промокод <code>{code}</code> создан.\nТариф: {plan}\nИспользований: {uses}",
+        "admin_promo_deleted": "🗑 Промокод {code} удалён.",
+        "admin_promos_list": "🎟 <b>Промокоды:</b>\n\n{promos}",
+        "admin_no_promos": "Промокодов нет.",
+        "admin_enter_uid": "Введи Telegram ID пользователя:",
+        "admin_uid_invalid": "❌ Неверный ID. Введи число.",
+        "admin_user_not_found": "❌ Пользователь не найден.",
+        "admin_choose_plan": "Выбери тариф для выдачи:",
+        "admin_enter_promo_code": "Введи текст промокода (латинские буквы/цифры):",
+        "admin_enter_promo_uses": "Сколько раз можно использовать? (0 = безлимит):",
+        "admin_enter_promo_plan": "Выбери тариф для промокода:",
+        "admin_broadcast_enter": "Введи текст для рассылки всем пользователям:",
+        "admin_broadcast_done": "📢 Рассылка завершена. Отправлено: {sent}, ошибок: {failed}.",
+        "btn_admin": "🛠 Админ-панель",
+        "btn_admin_users": "👥 Пользователи",
+        "btn_admin_give_sub": "🎁 Выдать подписку",
+        "btn_admin_promos": "🎟 Промокоды",
+        "btn_admin_new_promo": "➕ Новый промокод",
+        "btn_admin_broadcast": "📢 Рассылка",
+        "btn_admin_del_promo": "🗑 Удалить",
+        "btn_prev": "◀️",
+        "btn_next": "▶️",
     },
     "en": {
         "welcome": "👋 <b>Smart Sender Bot</b>\n\nSmart Telegram mailing with anti-ban protection.\n\n📊 Subscription: {sub}\n\nChoose an action 👇",
@@ -371,6 +470,53 @@ TEXTS = {
         "btn_buy_sub": "💎 Buy Subscription",
         "no_text": "⚠️ Enter at least one text.",
         "no_users": "⚠️ Enter at least one username.",
+        # Promo codes
+        "enter_promo": "🎟 Enter promo code:",
+        "promo_ok": "🎉 <b>Promo code activated!</b>\n\n✅ Plan «{name}» activated.\n\nSubscription: {sub}",
+        "promo_invalid": "❌ Invalid or already used promo code.",
+        "promo_expired": "❌ Promo code has expired.",
+        "promo_used_up": "❌ Promo code has been fully used.",
+        "btn_promo": "🎟 Enter promo code",
+        # Admin
+        "not_admin": "⛔ You don't have access to this section.",
+        "admin_panel": (
+            "🛠 <b>Admin Panel</b>\n\n"
+            "👥 Total users: <b>{total}</b>\n"
+            "✅ Active subscriptions: <b>{active}</b>\n"
+            "❌ No subscription: <b>{inactive}</b>\n\n"
+            "Choose action 👇"
+        ),
+        "admin_users_list": "👥 <b>Users list</b> (page {page}/{pages}):\n\n{users}",
+        "admin_user_info": (
+            "👤 <b>User {user_id}</b>\n"
+            "📛 Name: {name}\n"
+            "🌐 Language: {lang}\n"
+            "📊 Subscription: {sub}\n"
+            "🗓 Accounts: {acc_count}"
+        ),
+        "admin_sub_given": "✅ Subscription «{plan}» granted to user {user_id}.",
+        "admin_promo_created": "✅ Promo code <code>{code}</code> created.\nPlan: {plan}\nUses: {uses}",
+        "admin_promo_deleted": "🗑 Promo code {code} deleted.",
+        "admin_promos_list": "🎟 <b>Promo codes:</b>\n\n{promos}",
+        "admin_no_promos": "No promo codes.",
+        "admin_enter_uid": "Enter user Telegram ID:",
+        "admin_uid_invalid": "❌ Invalid ID. Enter a number.",
+        "admin_user_not_found": "❌ User not found.",
+        "admin_choose_plan": "Choose plan to grant:",
+        "admin_enter_promo_code": "Enter promo code text (latin letters/digits):",
+        "admin_enter_promo_uses": "How many times can it be used? (0 = unlimited):",
+        "admin_enter_promo_plan": "Choose plan for this promo code:",
+        "admin_broadcast_enter": "Enter text to broadcast to all users:",
+        "admin_broadcast_done": "📢 Broadcast done. Sent: {sent}, errors: {failed}.",
+        "btn_admin": "🛠 Admin Panel",
+        "btn_admin_users": "👥 Users",
+        "btn_admin_give_sub": "🎁 Grant subscription",
+        "btn_admin_promos": "🎟 Promo codes",
+        "btn_admin_new_promo": "➕ New promo code",
+        "btn_admin_broadcast": "📢 Broadcast",
+        "btn_admin_del_promo": "🗑 Delete",
+        "btn_prev": "◀️",
+        "btn_next": "▶️",
     }
 }
 
@@ -475,6 +621,61 @@ def activate_subscription(user_id: int, plan_key: str):
     set_user(user_id, {"expires": expires, "plan": plan[lang], "lang": lang})
 
 
+# ─── ПРОМОКОДИ ───────────────────────────────────────────────
+def load_promos() -> dict:
+    if os.path.exists(PROMO_FILE):
+        with open(PROMO_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_promos(promos: dict):
+    with open(PROMO_FILE, "w") as f:
+        json.dump(promos, f, ensure_ascii=False, indent=2)
+
+
+def create_promo(code: str, plan_key: str, max_uses: int = 1, expires_ts: float = 0) -> dict:
+    """Create a new promo code. max_uses=0 means unlimited."""
+    promos = load_promos()
+    promo = {
+        "plan": plan_key,
+        "max_uses": max_uses,
+        "used_count": 0,
+        "used_by": [],
+        "expires": expires_ts,  # 0 = no expiry
+        "created": time.time()
+    }
+    promos[code.upper()] = promo
+    save_promos(promos)
+    return promo
+
+
+def use_promo(user_id: int, code: str):
+    """
+    Try to apply a promo code for user_id.
+    Returns (True, plan_key) on success or (False, reason_key) on failure.
+    """
+    promos = load_promos()
+    code = code.upper().strip()
+    promo = promos.get(code)
+    if not promo:
+        return False, "promo_invalid"
+    # Check expiry
+    if promo["expires"] and time.time() > promo["expires"]:
+        return False, "promo_expired"
+    # Check max uses
+    if promo["max_uses"] > 0 and promo["used_count"] >= promo["max_uses"]:
+        return False, "promo_used_up"
+    # Check if already used by this user
+    if user_id in promo["used_by"]:
+        return False, "promo_invalid"
+    # Apply
+    promo["used_count"] += 1
+    promo["used_by"].append(user_id)
+    save_promos(promos)
+    return True, promo["plan"]
+
+
 # ─── АКАУНТИ (окремі для кожного юзера) ─────────────────────
 def load_all_accounts() -> dict:
     if os.path.exists(ACCOUNTS_FILE):
@@ -548,6 +749,25 @@ class Payment(StatesGroup):
     waiting_confirm = State()
 
 
+class PromoInput(StatesGroup):
+    entering_code = State()
+
+
+class AdminGiveSub(StatesGroup):
+    entering_uid = State()
+    choosing_plan = State()
+
+
+class AdminCreatePromo(StatesGroup):
+    entering_code = State()
+    entering_uses = State()
+    choosing_plan = State()
+
+
+class AdminBroadcast(StatesGroup):
+    entering_text = State()
+
+
 # ─── КЛАВІАТУРИ ──────────────────────────────────────────────
 def main_menu_kb(user_id: int = None):
     kb = InlineKeyboardBuilder()
@@ -556,9 +776,12 @@ def main_menu_kb(user_id: int = None):
         kb.button(text=t(user_id, "btn_manage"), callback_data="manage_accounts")
     else:
         kb.button(text=t(user_id, "btn_buy"), callback_data="buy_sub")
+        kb.button(text=t(user_id, "btn_promo"), callback_data="enter_promo")
     kb.button(text=t(user_id, "btn_my_sub"), callback_data="my_sub")
     kb.button(text=t(user_id, "btn_help"), callback_data="help")
     kb.button(text=t(user_id, "btn_settings"), callback_data="settings")
+    if user_id and user_id in ADMIN_IDS:
+        kb.button(text=t(user_id, "btn_admin"), callback_data="admin_panel")
     kb.adjust(1)
     return kb.as_markup()
 
@@ -638,11 +861,67 @@ def lang_kb():
     return kb.as_markup()
 
 
+def admin_panel_kb(user_id: int):
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_admin_users"),    callback_data="admin_users_0")
+    kb.button(text=t(user_id, "btn_admin_give_sub"), callback_data="admin_give_sub")
+    kb.button(text=t(user_id, "btn_admin_promos"),   callback_data="admin_promos")
+    kb.button(text=t(user_id, "btn_admin_broadcast"),callback_data="admin_broadcast")
+    kb.button(text=t(user_id, "btn_back"),           callback_data="back_main")
+    kb.adjust(1)
+    return kb.as_markup()
+
+
+def admin_plans_kb(user_id: int, prefix: str):
+    """Plans keyboard for admin actions (prefix used as callback prefix)."""
+    lang = get_user_lang(user_id)
+    kb = InlineKeyboardBuilder()
+    for key, plan in PLANS.items():
+        kb.button(text=f"{plan[lang]} — {plan['amount']} TON", callback_data=f"{prefix}{key}")
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_panel")
+    kb.adjust(1)
+    return kb.as_markup()
+
+
+def admin_promos_kb(user_id: int):
+    promos = load_promos()
+    kb = InlineKeyboardBuilder()
+    for code, info in promos.items():
+        uses_str = f"{info['used_count']}/{'∞' if info['max_uses']==0 else info['max_uses']}"
+        kb.button(text=f"🎟 {code} [{uses_str}]", callback_data=f"admin_del_promo_{code}")
+    kb.button(text=t(user_id, "btn_admin_new_promo"), callback_data="admin_new_promo")
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_panel")
+    kb.adjust(1)
+    return kb.as_markup()
+
+
+def admin_users_nav_kb(user_id: int, page: int, total_pages: int):
+    kb = InlineKeyboardBuilder()
+    nav = []
+    if page > 0:
+        nav.append(kb.button(text=t(user_id, "btn_prev"), callback_data=f"admin_users_{page-1}"))
+    if page < total_pages - 1:
+        nav.append(kb.button(text=t(user_id, "btn_next"), callback_data=f"admin_users_{page+1}"))
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_panel")
+    kb.adjust(2, 1)
+    return kb.as_markup()
+
+
 # ─── /start ──────────────────────────────────────────────────
 @dp.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
     user_id = message.from_user.id
+    # Зберігаємо ім'я користувача
+    users = load_users()
+    uid_str = str(user_id)
+    if uid_str not in users:
+        users[uid_str] = {}
+    name = f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
+    users[uid_str]["name"] = name or "—"
+    if "lang" not in users[uid_str]:
+        users[uid_str]["lang"] = "uk"
+    save_users(users)
     sub_text = get_subscription_text(user_id)
     await message.answer(
         t(user_id, "welcome", sub=sub_text),
@@ -1202,6 +1481,388 @@ async def cb_run(call: CallbackQuery, state: FSMContext):
         t(user_id, "mailing_done", total=len(users), sent=sent, failed=failed) + errors_text,
         parse_mode="HTML",
         reply_markup=main_menu_kb(user_id)
+    )
+
+
+# ─── ПРОМОКОДИ (КОРИСТУВАЧ) ──────────────────────────────────
+@dp.callback_query(F.data == "enter_promo")
+async def cb_enter_promo(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    await state.set_state(PromoInput.entering_code)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_cancel"), callback_data="cancel_promo")
+    await call.message.edit_text(
+        t(user_id, "enter_promo"),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+@dp.callback_query(F.data == "cancel_promo")
+async def cb_cancel_promo(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    user_id = call.from_user.id
+    sub_text = get_subscription_text(user_id)
+    await call.message.edit_text(
+        t(user_id, "welcome", sub=sub_text),
+        parse_mode="HTML",
+        reply_markup=main_menu_kb(user_id)
+    )
+
+
+@dp.message(PromoInput.entering_code)
+async def step_promo_code(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    code = message.text.strip()
+    ok, result = use_promo(user_id, code)
+    if ok:
+        plan_key = result
+        activate_subscription(user_id, plan_key)
+        lang = get_user_lang(user_id)
+        name = PLANS[plan_key][lang]
+        await state.clear()
+        await message.answer(
+            t(user_id, "promo_ok", name=name, sub=get_subscription_text(user_id)),
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
+    else:
+        reason = result  # promo_invalid / promo_expired / promo_used_up
+        await state.clear()
+        await message.answer(
+            t(user_id, reason),
+            parse_mode="HTML",
+            reply_markup=main_menu_kb(user_id)
+        )
+
+
+# ─── АДМІН-ПАНЕЛЬ ────────────────────────────────────────────
+def is_admin(user_id: int) -> bool:
+    return user_id in ADMIN_IDS
+
+
+@dp.callback_query(F.data == "admin_panel")
+async def cb_admin_panel(call: CallbackQuery, state: FSMContext):
+    await state.clear()
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    users = load_users()
+    total = len(users)
+    active = sum(1 for u in users.values() if has_active_subscription(int(list(users.keys())[list(users.values()).index(u)])))
+    # recalculate properly
+    active = 0
+    for uid_str, udata in users.items():
+        exp = udata.get("expires")
+        if exp == -1 or (exp and time.time() < exp):
+            active += 1
+    inactive = total - active
+    await call.message.edit_text(
+        t(user_id, "admin_panel", total=total, active=active, inactive=inactive),
+        parse_mode="HTML",
+        reply_markup=admin_panel_kb(user_id)
+    )
+
+
+# ─── АДМІН: СПИСОК КОРИСТУВАЧІВ ──────────────────────────────
+PAGE_SIZE = 10
+
+@dp.callback_query(F.data.startswith("admin_users_"))
+async def cb_admin_users(call: CallbackQuery):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    page = int(call.data.replace("admin_users_", ""))
+    users = load_users()
+    all_accounts = load_all_accounts()
+    uids = list(users.keys())
+    total_pages = max(1, (len(uids) + PAGE_SIZE - 1) // PAGE_SIZE)
+    page = max(0, min(page, total_pages - 1))
+    chunk = uids[page * PAGE_SIZE:(page + 1) * PAGE_SIZE]
+
+    lines = []
+    for uid_str in chunk:
+        udata = users[uid_str]
+        exp = udata.get("expires")
+        if exp == -1:
+            sub_icon = "♾"
+        elif exp and time.time() < exp:
+            days_left = int((exp - time.time()) // 86400)
+            sub_icon = f"✅{days_left}д"
+        else:
+            sub_icon = "❌"
+        name = udata.get("name", "—")
+        acc_count = len(all_accounts.get(uid_str, {}))
+        lines.append(f"<code>{uid_str}</code> {sub_icon} 👤{name} 📱{acc_count}")
+
+    text = t(user_id, "admin_users_list",
+             page=page+1, pages=total_pages,
+             users="\n".join(lines) if lines else "—")
+    await call.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=admin_users_nav_kb(user_id, page, total_pages)
+    )
+
+
+# ─── АДМІН: ВИДАТИ ПІДПИСКУ ───────────────────────────────────
+@dp.callback_query(F.data == "admin_give_sub")
+async def cb_admin_give_sub(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    await state.set_state(AdminGiveSub.entering_uid)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_panel")
+    await call.message.edit_text(
+        t(user_id, "admin_enter_uid"),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+@dp.message(AdminGiveSub.entering_uid)
+async def admin_give_sub_uid(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    raw = message.text.strip()
+    if not raw.isdigit():
+        await message.answer(t(user_id, "admin_uid_invalid"))
+        return
+    target_uid = int(raw)
+    # Check user exists
+    if not get_user(target_uid):
+        await message.answer(t(user_id, "admin_user_not_found"))
+        await state.clear()
+        return
+    await state.update_data(target_uid=target_uid)
+    await state.set_state(AdminGiveSub.choosing_plan)
+    await message.answer(
+        t(user_id, "admin_choose_plan"),
+        parse_mode="HTML",
+        reply_markup=admin_plans_kb(user_id, "admin_givesub_plan_")
+    )
+
+
+@dp.callback_query(F.data.startswith("admin_givesub_plan_"), AdminGiveSub.choosing_plan)
+async def admin_give_sub_plan(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer()
+        return
+    plan_key = call.data.replace("admin_givesub_plan_", "")
+    data = await state.get_data()
+    target_uid = data["target_uid"]
+    activate_subscription(target_uid, plan_key)
+    lang = get_user_lang(user_id)
+    plan_name = PLANS[plan_key][lang]
+    await state.clear()
+    await call.message.edit_text(
+        t(user_id, "admin_sub_given", plan=plan_name, user_id=target_uid),
+        parse_mode="HTML",
+        reply_markup=admin_panel_kb(user_id)
+    )
+    # Notify the user
+    try:
+        await bot.send_message(
+            target_uid,
+            f"🎁 Вам видана підписка «{plan_name}»!\n\nПідписка: {get_subscription_text(target_uid)}"
+        )
+    except Exception:
+        pass
+
+
+# ─── АДМІН: ПРОМОКОДИ ─────────────────────────────────────────
+@dp.callback_query(F.data == "admin_promos")
+async def cb_admin_promos(call: CallbackQuery):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    promos = load_promos()
+    if promos:
+        lines = []
+        for code, info in promos.items():
+            uses_str = f"{info['used_count']}/{'∞' if info['max_uses']==0 else info['max_uses']}"
+            exp_str = f" exp:{int(info['expires'])}" if info.get("expires") else ""
+            lines.append(f"• <code>{code}</code> [{uses_str}] plan:{info['plan']}{exp_str}")
+        text = t(user_id, "admin_promos_list", promos="\n".join(lines))
+    else:
+        text = t(user_id, "admin_no_promos")
+    await call.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=admin_promos_kb(user_id)
+    )
+
+
+@dp.callback_query(F.data.startswith("admin_del_promo_"))
+async def cb_admin_del_promo(call: CallbackQuery):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    code = call.data.replace("admin_del_promo_", "")
+    promos = load_promos()
+    if code in promos:
+        del promos[code]
+        save_promos(promos)
+    await call.answer(t(user_id, "admin_promo_deleted", code=code))
+    # Refresh promo list
+    if promos:
+        lines = []
+        for c, info in promos.items():
+            uses_str = f"{info['used_count']}/{'∞' if info['max_uses']==0 else info['max_uses']}"
+            lines.append(f"• <code>{c}</code> [{uses_str}] plan:{info['plan']}")
+        text = t(user_id, "admin_promos_list", promos="\n".join(lines))
+    else:
+        text = t(user_id, "admin_no_promos")
+    await call.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=admin_promos_kb(user_id)
+    )
+
+
+@dp.callback_query(F.data == "admin_new_promo")
+async def cb_admin_new_promo(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    await state.set_state(AdminCreatePromo.entering_code)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_promos")
+    await call.message.edit_text(
+        t(user_id, "admin_enter_promo_code"),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+@dp.message(AdminCreatePromo.entering_code)
+async def admin_promo_code_input(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    code = message.text.strip().upper()
+    await state.update_data(promo_code=code)
+    await state.set_state(AdminCreatePromo.entering_uses)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_cancel"), callback_data="admin_promos")
+    await message.answer(
+        t(user_id, "admin_enter_promo_uses"),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+@dp.message(AdminCreatePromo.entering_uses)
+async def admin_promo_uses_input(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    raw = message.text.strip()
+    if not raw.isdigit():
+        await message.answer("❌ Введи число.")
+        return
+    max_uses = int(raw)
+    await state.update_data(max_uses=max_uses)
+    await state.set_state(AdminCreatePromo.choosing_plan)
+    await message.answer(
+        t(user_id, "admin_enter_promo_plan"),
+        parse_mode="HTML",
+        reply_markup=admin_plans_kb(user_id, "admin_promo_plan_")
+    )
+
+
+@dp.callback_query(F.data.startswith("admin_promo_plan_"), AdminCreatePromo.choosing_plan)
+async def admin_promo_plan_chosen(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer()
+        return
+    plan_key = call.data.replace("admin_promo_plan_", "")
+    data = await state.get_data()
+    code = data["promo_code"]
+    max_uses = data["max_uses"]
+    create_promo(code, plan_key, max_uses)
+    lang = get_user_lang(user_id)
+    plan_name = PLANS[plan_key][lang]
+    uses_str = str(max_uses) if max_uses > 0 else "∞"
+    await state.clear()
+    await call.message.edit_text(
+        t(user_id, "admin_promo_created", code=code, plan=plan_name, uses=uses_str),
+        parse_mode="HTML",
+        reply_markup=admin_panel_kb(user_id)
+    )
+
+
+# ─── АДМІН: РОЗСИЛКА ─────────────────────────────────────────
+@dp.callback_query(F.data == "admin_broadcast")
+async def cb_admin_broadcast(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    if not is_admin(user_id):
+        await call.answer(t(user_id, "not_admin"), show_alert=True)
+        return
+    await state.set_state(AdminBroadcast.entering_text)
+    kb = InlineKeyboardBuilder()
+    kb.button(text=t(user_id, "btn_back"), callback_data="admin_panel")
+    await call.message.edit_text(
+        t(user_id, "admin_broadcast_enter"),
+        parse_mode="HTML",
+        reply_markup=kb.as_markup()
+    )
+
+
+@dp.message(AdminBroadcast.entering_text)
+async def admin_broadcast_send(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        return
+    text = message.text.strip()
+    users = load_users()
+    await state.clear()
+    sent = 0
+    failed = 0
+    for uid_str in users.keys():
+        try:
+            await bot.send_message(int(uid_str), text, parse_mode="HTML")
+            sent += 1
+        except Exception:
+            failed += 1
+        await asyncio.sleep(0.05)  # Flood prevention
+    await message.answer(
+        t(user_id, "admin_broadcast_done", sent=sent, failed=failed),
+        parse_mode="HTML",
+        reply_markup=admin_panel_kb(user_id)
+    )
+
+
+# ─── АДМІН: /admin команда ───────────────────────────────────
+@dp.message(lambda m: m.text and m.text.strip() == "/admin")
+async def cmd_admin(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        await message.answer(t(user_id, "not_admin"))
+        return
+    await state.clear()
+    users = load_users()
+    total = len(users)
+    active = 0
+    for uid_str, udata in users.items():
+        exp = udata.get("expires")
+        if exp == -1 or (exp and time.time() < exp):
+            active += 1
+    inactive = total - active
+    await message.answer(
+        t(user_id, "admin_panel", total=total, active=active, inactive=inactive),
+        parse_mode="HTML",
+        reply_markup=admin_panel_kb(user_id)
     )
 
 
