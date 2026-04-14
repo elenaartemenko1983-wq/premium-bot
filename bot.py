@@ -22,7 +22,7 @@ from telethon.errors import (
 logging.basicConfig(level=logging.INFO)
 
 # ─── НАЛАШТУВАННЯ ────────────────────────────────────────────
-BOT_TOKEN = "8433025527:AAFZgMG4qNWUzb7EBiQDgWIHKdshpkdg7NM"
+BOT_TOKEN = "8764053648:AAFnB_jAFHYH-6JclboxDeH1l6sMAAmopTs"
 ACCOUNTS_FILE = "accounts.json"
 USERS_FILE = "users.json"
 PROMO_FILE = "promos.json"
